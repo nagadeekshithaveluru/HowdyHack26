@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<!--
+  Pinch Draw: draw on a canvas by pinching thumb + index finger in front of a webcam.
+  How it works:
+    1. Title screen -> Start button -> browser asks for camera.
+    2. MediaPipe Hand Landmarker finds 21 points on your hand in each video frame.
+    3. Before the canvas opens, a red/green detector shows whether you are pinching.
+    4. Hold a pinch (green) -> screen splits into camera | blank canvas.
+    5. While pinching, the pinch point on the camera is drawn at the same spot on the canvas.
+  Single file: no build step. Needs https:// or localhost for camera access.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pinch Draw</title>
+<!-- Open connections to the model hosts early so loading starts sooner -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs">
+<style>
+  :root { --bg:#14151a; --panel:#1f2128; --text:#eceef3; --accent:#7cf0c4; --stage-w:min(100vw, calc((100vh - 70px) * 16 / 9)); }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { display:flex; flex-direction:column; align-items:center; }
+  header { width:100%; display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    justify-content:center; padding:10px; background:var(--panel); }
+  button { background:#2b2e38; color:var(--text); border:1px solid #3a3e4b; border-radius:8px;
+    padding:8px 14px; font-size:14px; cursor:pointer; }
+  button:hover { border-color:var(--accent); }
+  .swatch { width:28px; height:28px; border-radius:50%; border:2px solid #555; padding:0; }
+  .swatch.on { border-color:#fff; box-shadow:0 0 0 2px var(--accent); }
+  label { font-size:13px; display:flex; align-items:center; gap:6px; }
+
+  /* Layout: camera only until a pinch is confirmed, then camera | canvas (.split) */
+  #stage { display:flex; gap:10px; width:var(--stage-w); margin-top:8px; transition:width .4s ease; }
+  #stage.split { width:min(100vw, calc((100vh - 70px) * 32 / 9 + 10px)); padding:0 6px; }
+  /* Each pane is a 16:9 box; layers inside stack on top of each other */
+  .pane { position:relative; flex:1; min-width:0; align-self:flex-start; aspect-ratio:16/9; min-height:160px; border-radius:10px; overflow:hidden; }
+  .pane > * { position:absolute; inset:0; width:100%; height:100%; }
+  #cam-pane { background:#000; }
+  #canvas-pane { background:#fff; display:none; }
+  #stage.split #canvas-pane { display:block; animation:pop .4s ease; }
+  @keyframes pop { from { opacity:0; transform:scale(.96); } to { opacity:1; transform:none; } }
+  /* Live camera feed (mirrored like a mirror) fills the camera pane */
+  #cam { z-index:1; display:block; background:#000; transform:scaleX(-1); object-fit:fill; opacity:1; transition:opacity .2s; }
+  .tag { position:absolute; top:8px; left:8px; width:auto; height:auto; padding:3px 9px; font-size:12px;
+    background:rgba(0,0,0,.55); color:#fff; border-radius:6px; }
+  #canvas-pane .tag { color:#222; background:rgba(0,0,0,.08); }
+  /* Pinch detector drawn on top of the camera view: big badge + colored frame */
+  #detector { z-index:10; top:16px; left:50%; right:auto; bottom:auto; width:64px; height:64px;
+    transform:translateX(-50%); border-radius:50%; background:#ff4d5e; border:4px solid #fff;
+    box-shadow:0 0 22px rgba(255,77,94,.8); transition:background .15s, box-shadow .15s; pointer-events:none; }
+  #detector.ok { background:#2ee59d; box-shadow:0 0 22px rgba(46,229,157,.9); }
+  #cam-pane::after { content:""; position:absolute; inset:0; z-index:9; pointer-events:none;
+    border:6px solid #ff4d5e; border-radius:10px; transition:border-color .15s; }
+  #cam-pane.ok::after { border-color:#2ee59d; }
+  #stage.split #detector, #stage.split #cam-pane::after { display:none; }
+  #cam-overlay { z-index:5; }
+  #status { position:absolute; left:10px; bottom:10px; width:auto; height:auto; padding:6px 10px;
+    background:rgba(0,0,0,.65); border-radius:6px; font-size:13px; }
+
+  /* Title screen */
+  #title { position:fixed; inset:0; z-index:100; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:18px; padding:24px; text-align:center;
+    background:radial-gradient(circle at 50% 35%, #26293a, #14151a 70%); transition:opacity .35s; }
+  #title.gone { opacity:0; pointer-events:none; }
+  #title h1 { margin:0; font-size:clamp(40px, 9vw, 84px); letter-spacing:-.02em; }
+  #title h1 span { color:var(--accent); }
+  #title p { margin:0; max-width:460px; font-size:17px; line-height:1.5; color:#aab0c0; }
+  #start { background:var(--accent); color:#0c1a14; border:none; font-size:18px; font-weight:600;
+    padding:14px 36px; border-radius:999px; }
+  #start:hover { filter:brightness(1.08); }
+  #title small { color:#7d8497; font-size:13px; }
+</style>
+</head>
+<body>
+<!-- Title screen: camera permission is only requested after Start is clicked -->
+<div id="title">
+  <h1>Pinch <span>Draw</span></h1>
+  <p>Draw in the air. Pinch your thumb and index finger together in front of your webcam to start drawing, and let go to stop.</p>
+  <button id="start">Start</button>
+  <small>Next, your browser will ask to use your camera. Video stays on your device.</small>
+</div>
+<!-- Toolbar -->
+<header>
+  <span id="swatches"></span>
+  <label>Size <input id="size" type="range" min="2" max="30" value="8"></label>
+  <button id="video-toggle">Hide camera</button>
+  <button id="clear">Clear</button>
+  <button id="save">Save PNG</button>
+</header>
+
+<!-- Camera pane (video + overlay + detector) and canvas pane (drawing + cursor) -->
+<div id="stage">
+  <div class="pane" id="cam-pane">
+    <video id="cam" autoplay playsinline muted webkit-playsinline></video>
+    <canvas id="cam-overlay" width="1280" height="720"></canvas>
+    <span class="tag">Camera</span>
+    <div id="detector"></div>
+    <div id="status">Loading hand tracker…</div>
+  </div>
+  <div class="pane" id="canvas-pane">
+    <canvas id="draw" width="1280" height="720"></canvas>
+    <canvas id="cursor" width="1280" height="720"></canvas>
+    <span class="tag">Canvas</span>
+  </div>
+</div>
+
+<script type="module">
+// MediaPipe Tasks Vision (pinned version) provides the hand tracking model
+import { HandLandmarker, FilesetResolver } from
+  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+// All overlay/drawing canvases share one 1280x720 coordinate space, so camera positions map 1:1 to the canvas
+const W = 1280, H = 720;
+const $ = id => document.getElementById(id);
+const video = $("cam"), stage = $("stage"), statusEl = $("status"), detector = $("detector");
+// dctx = the drawing (ink), cctx = pen cursor on canvas, octx = markers on top of the camera
+const dctx = $("draw").getContext("2d");
+const cctx = $("cursor").getContext("2d");
+const octx = $("cam-overlay").getContext("2d");
+
+// ---- UI: color swatches, brush size, camera toggle, clear, save ----
+const COLORS = ["#111111", "#e5384f", "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6"];
+let color = COLORS[0], size = 8;
+COLORS.forEach((c, i) => {
+  const b = document.createElement("button");
+  b.className = "swatch" + (i === 0 ? " on" : "");
+  b.style.background = c;
+  b.onclick = () => { color = c; [...$("swatches").children].forEach(x => x.classList.remove("on")); b.classList.add("on"); };
+  $("swatches").appendChild(b);
+});
+$("size").oninput = e => size = +e.target.value;
+$("clear").onclick = () => dctx.clearRect(0, 0, W, H);
+let showVideo = true;
+$("video-toggle").onclick = e => {
+  showVideo = !showVideo;
+  video.style.opacity = showVideo ? 1 : 0;
+  e.target.textContent = showVideo ? "Hide camera" : "Show camera";
+};
+// Export the drawing on a white background as a PNG
+$("save").onclick = () => {
+  const out = document.createElement("canvas"); out.width = W; out.height = H;
+  const o = out.getContext("2d");
+  o.fillStyle = "#fff"; o.fillRect(0, 0, W, H); o.drawImage($("draw"), 0, 0);
+  const a = document.createElement("a"); a.download = "pinch-draw.png";
+  a.href = out.toDataURL("image/png"); a.click();
+};
+
+// ---- Setup ----
+// Load the hand model in the background while the title screen is showing
+const landmarkerPromise = (async () => {
+  const fileset = await FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+  const lm = await HandLandmarker.createFromOptions(fileset, {
+    baseOptions: {
+      modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+      delegate: "GPU"
+    },
+    runningMode: "VIDEO",
+    numHands: 1,
+    minHandDetectionConfidence: 0.6,
+    minHandPresenceConfidence: 0.6,
+    minTrackingConfidence: 0.6
+  });
+  // Warm-up: one dummy pass compiles the GPU shaders now, so the first real frame isn't slow
+  const c = document.createElement("canvas"); c.width = c.height = 256;
+  try { lm.detectForVideo(c, performance.now()); } catch (e) {}
+  return lm;
+})();
+landmarkerPromise.catch(() => {});
+
+// Runs when Start is pressed: asks for the camera, then starts the tracking loop
+async function init() {
+  // Called when the user presses Start: only now does the browser ask for the camera
+  $("start").disabled = true; $("start").textContent = "Starting…";
+  statusEl.textContent = "Requesting camera…";
+  video.muted = true; video.playsInline = true;
+  video.srcObject = await navigator.mediaDevices.getUserMedia({
+    video: { width: 1280, height: 720, facingMode: "user" }
+  });
+  await video.play();
+  $("title").classList.add("gone");   // permission granted: leave the title screen
+  video.style.opacity = 1; showVideo = true;
+  $("video-toggle").textContent = "Hide camera";
+  statusEl.textContent = "Loading hand tracker…";
+  const landmarker = await landmarkerPromise;
+  statusEl.style.display = "none";
+  loop(landmarker);
+}
+
+// ---- Tracking settings and helpers ----
+const PINCH_R = 16;        // detection circle radius (px in 1280x720 space): both fingertips must be inside it
+const PINCH_R_OFF = 24;    // release radius (a little larger so the stroke doesn't flicker)
+const SETTLE_FRAMES = 4;   // after a pinch begins, wait this many frames before inking
+const MARGIN = 0.02;                        // thumb & index must be this far inside the frame edge
+const FINGER_IDS = [1, 2, 3, 4, 5, 6, 7, 8]; // thumb (1-4) and index (5-8) joints
+const STABLE_FRAMES = 2;                    // fingers must be in view this many frames in a row
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+// Distance from the thumb/index midpoint to either tip, in pixels. Both tips are inside the circle iff this <= radius.
+const pinchHalf = lm => Math.hypot((lm[4].x - lm[8].x) * W, (lm[4].y - lm[8].y) * H) / 2;
+// Draw only when every thumb and index joint is inside the camera frame
+const fingersUsable = lm => FINGER_IDS.every(i =>
+  lm[i].x > MARGIN && lm[i].x < 1 - MARGIN && lm[i].y > MARGIN && lm[i].y < 1 - MARGIN);
+// State: visibleFrames/pinchFrames count consecutive frames; (sx, sy) = smoothed pen position;
+// last = previous ink point (null = pen up); split = canvas is showing
+let visibleFrames = 0, pinchFrames = 0;
+
+let pinching = false, last = null, sx = 0, sy = 0, lastVideoTime = -1, split = false;
+
+// Runs every animation frame; only analyzes when the camera has a new video frame
+function loop(landmarker) {
+  if (video.currentTime !== lastVideoTime) {
+    lastVideoTime = video.currentTime;
+    const res = landmarker.detectForVideo(video, performance.now());
+    handle(res.landmarks && res.landmarks[0]);
+  }
+  requestAnimationFrame(() => loop(landmarker));
+}
+
+// Draws a ring (and a filled pen dot if `fill` is given)
+function ring(ctx, x, y, r, stroke, fill) {
+  ctx.lineWidth = 3; ctx.strokeStyle = stroke;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+  if (fill) { ctx.fillStyle = fill; ctx.beginPath(); ctx.arc(x, y, size / 2, 0, Math.PI * 2); ctx.fill(); }
+}
+
+// ---- Pre-canvas pinch detector: red = not pinched, green = pinched ----
+const HOLD_FRAMES = 10;   // hold a pinch this many frames (~0.3 s) to open the canvas
+let previewPinch = false, hold = 0;
+// Before the canvas opens: draws the red/green dots, line and ring, and opens the canvas after a held pinch
+function preview(lm) {
+  let ok = false;
+  if (lm && fingersUsable(lm)) {
+    previewPinch = pinchHalf(lm) <= (previewPinch ? PINCH_R_OFF : PINCH_R);
+    ok = previewPinch;
+    const c = ok ? "#2ee59d" : "#ff4d5e";
+    // Landmark 4 = thumb tip, 8 = index tip. x is flipped because the camera view is mirrored
+    const a = { x: (1 - lm[4].x) * W, y: lm[4].y * H }, b = { x: (1 - lm[8].x) * W, y: lm[8].y * H };
+    octx.strokeStyle = c; octx.lineWidth = 2;
+    octx.beginPath(); octx.moveTo(a.x, a.y); octx.lineTo(b.x, b.y); octx.stroke();
+    octx.fillStyle = c;
+    for (const p of [a, b]) { octx.beginPath(); octx.arc(p.x, p.y, 5, 0, Math.PI * 2); octx.fill(); }
+    ring(octx, (a.x + b.x) / 2, (a.y + b.y) / 2, PINCH_R, c);
+  } else {
+    previewPinch = false;
+  }
+  detector.className = ok ? "ok" : "";
+  $("cam-pane").classList.toggle("ok", ok);
+  hold = ok ? hold + 1 : 0;
+  if (hold >= HOLD_FRAMES) {      // pinch confirmed: show the canvas
+    split = true; stage.classList.add("split");
+    pinching = false; last = null; visibleFrames = STABLE_FRAMES; pinchFrames = 0;
+  }
+}
+
+// Called once per detected frame (lm = 21 hand landmarks, or undefined if no hand)
+function handle(lm) {
+  cctx.clearRect(0, 0, W, H);
+  octx.clearRect(0, 0, W, H);
+  if (!split) { preview(lm); return; }   // before the canvas is shown: pinch detector only
+  if (!lm) { pinching = false; last = null; visibleFrames = 0; pinchFrames = 0; return; }
+
+  const thumb = lm[4], index = lm[8];   // fingertip landmarks
+
+  // Only draw when the thumb and index finger are clearly visible (in frame, not curled)
+  if (!fingersUsable(lm)) {
+    pinching = false; last = null; visibleFrames = 0; pinchFrames = 0;
+    for (const p of [thumb, index]) {
+      octx.fillStyle = "#ff5c7a"; octx.beginPath();
+      octx.arc((1 - p.x) * W, p.y * H, 5, 0, Math.PI * 2); octx.fill();
+    }
+    return;
+  }
+  visibleFrames++;
+
+  // Both fingertips must be inside the detection circle (centered on their midpoint) to pinch
+  pinching = visibleFrames >= STABLE_FRAMES && pinchHalf(lm) <= (pinching ? PINCH_R_OFF : PINCH_R);
+
+  // Pinch point = midpoint of thumb & index tips; x flipped to match the mirrored camera
+  const tx = (1 - (thumb.x + index.x) / 2) * W;
+  const ty = ((thumb.y + index.y) / 2) * H;
+
+  if (!pinching) {
+    sx = tx; sy = ty; last = null; pinchFrames = 0;   // pen up: cursor follows exactly
+  } else {
+    pinchFrames++;
+    if (pinchFrames <= SETTLE_FRAMES) {
+      sx = tx; sy = ty; last = null;                  // fingers still closing: snap, no ink yet
+    } else {
+      sx += (tx - sx) * 0.5; sy += (ty - sy) * 0.5;   // light smoothing while drawing
+      dctx.strokeStyle = dctx.fillStyle = color;
+      if (last) {
+        dctx.lineWidth = size; dctx.lineCap = dctx.lineJoin = "round";
+        dctx.beginPath(); dctx.moveTo(last.x, last.y); dctx.lineTo(sx, sy); dctx.stroke();
+      } else {
+        dctx.beginPath(); dctx.arc(sx, sy, size / 2, 0, Math.PI * 2); dctx.fill();
+      }
+      last = { x: sx, y: sy };
+    }
+  }
+
+  // --- Feedback: pen cursor on the canvas, markers + ring on the camera ---
+  // Cursor on the canvas side
+  ring(cctx, sx, sy, Math.max(size, 8) + 6, pinching ? color : "rgba(0,0,0,.5)", pinching ? color : null);
+  // Tracking markers on the camera side
+  for (const p of [thumb, index]) {
+    octx.fillStyle = "#7cf0c4"; octx.beginPath();
+    octx.arc((1 - p.x) * W, p.y * H, 5, 0, Math.PI * 2); octx.fill();
+  }
+  ring(octx, tx, ty, PINCH_R, pinching ? "#7cf0c4" : "rgba(255,255,255,.8)");
+
+}
+
+// Start button: begin camera flow; on failure, return to the title screen with an error message
+$("start").onclick = () => init().catch(err => {
+  console.error(err);
+  $("title").classList.remove("gone"); $("start").disabled = false; $("start").textContent = "Start";
+  document.querySelector("#title small").textContent = "Couldn't start: " + err.message + " (the camera needs https or localhost, and permission must be allowed)";
+});
+</script>
+</body>
+</html>
