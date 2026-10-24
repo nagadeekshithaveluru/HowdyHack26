@@ -161,9 +161,9 @@ const landmarkerPromise = (async () => {
     },
     runningMode: "VIDEO",
     numHands: 1,
-    minHandDetectionConfidence: 0.6,
-    minHandPresenceConfidence: 0.6,
-    minTrackingConfidence: 0.6
+    minHandDetectionConfidence: 0.35,
+    minHandPresenceConfidence: 0.35,
+    minTrackingConfidence: 0.35
   });
   // Warm-up: one dummy pass compiles the GPU shaders now, so the first real frame isn't slow
   const c = document.createElement("canvas"); c.width = c.height = 256;
@@ -178,9 +178,18 @@ async function init() {
   $("start").disabled = true; $("start").textContent = "Starting…";
   statusEl.textContent = "Requesting camera…";
   video.muted = true; video.playsInline = true;
-  video.srcObject = await navigator.mediaDevices.getUserMedia({
+  const stream = await navigator.mediaDevices.getUserMedia({
     video: { width: 1280, height: 720, facingMode: "user" }
   });
+  video.srcObject = stream;
+  // Best effort: lower exposure a touch so bright light doesn't wash out the fingers (not all cameras support it)
+  try {
+    const track = stream.getVideoTracks()[0], caps = track.getCapabilities ? track.getCapabilities() : {};
+    const adv = {};
+    if (caps.exposureMode && caps.exposureMode.includes("continuous")) adv.exposureMode = "continuous";
+    if (caps.exposureCompensation) adv.exposureCompensation = Math.max(caps.exposureCompensation.min, -1);
+    if (Object.keys(adv).length) await track.applyConstraints({ advanced: [adv] });
+  } catch (e) {}
   await video.play();
   $("title").classList.add("gone");   // permission granted: leave the title screen
   video.style.opacity = 1; showVideo = true;
@@ -192,18 +201,29 @@ async function init() {
 }
 
 // ---- Tracking settings and helpers ----
-const PINCH_R = 16;        // detection circle radius (px in 1280x720 space): both fingertips must be inside it
-const PINCH_R_OFF = 24;    // release radius (a little larger so the stroke doesn't flicker)
+const PINCH_R = 18.5;       // detection circle radius (px in 1280x720 space): both fingertips must be inside it
+const PINCH_R_OFF = 28;    // release radius (a little larger so the stroke doesn't flicker)
 const SETTLE_FRAMES = 4;   // after a pinch begins, wait this many frames before inking
-const MARGIN = 0.02;                        // thumb & index must be this far inside the frame edge
-const FINGER_IDS = [1, 2, 3, 4, 5, 6, 7, 8]; // thumb (1-4) and index (5-8) joints
+const MARGIN = -0.03;                       // fingertips may be up to 3% past the frame edge (the model extrapolates near corners)
+const FINGER_IDS = [4, 8];                  // only the thumb tip (4) and index tip (8) must be in frame
 const STABLE_FRAMES = 2;                    // fingers must be in view this many frames in a row
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 // Distance from the thumb/index midpoint to either tip, in pixels. Both tips are inside the circle iff this <= radius.
 const pinchHalf = lm => Math.hypot((lm[4].x - lm[8].x) * W, (lm[4].y - lm[8].y) * H) / 2;
-// Draw only when every thumb and index joint is inside the camera frame
+// Draw only when both fingertips are inside the camera frame (other joints may leave it, e.g. at the bottom edge)
 const fingersUsable = lm => FINGER_IDS.every(i =>
   lm[i].x > MARGIN && lm[i].x < 1 - MARGIN && lm[i].y > MARGIN && lm[i].y < 1 - MARGIN);
+// Anti-jitter (bright light makes landmarks noisy):
+const SMOOTH = 0.5;        // landmark smoothing: lower = steadier but laggier
+const RELEASE_FRAMES = 3;  // pinch must stay "open" this many frames in a row before the pen lifts
+const MISS_GRACE = 4;      // ignore this many consecutive frames with no hand (brief glare dropouts)
+let sm = null, missed = 0, releaseFrames = 0;
+function smooth(lm) {      // exponential moving average of all 21 landmarks
+  if (!lm) return lm;
+  if (!sm) sm = lm.map(p => ({ x: p.x, y: p.y }));
+  else lm.forEach((p, i) => { sm[i].x += (p.x - sm[i].x) * SMOOTH; sm[i].y += (p.y - sm[i].y) * SMOOTH; });
+  return sm;
+}
 // State: visibleFrames/pinchFrames count consecutive frames; (sx, sy) = smoothed pen position;
 // last = previous ink point (null = pen up); split = canvas is showing
 let visibleFrames = 0, pinchFrames = 0;
@@ -260,8 +280,13 @@ function preview(lm) {
 function handle(lm) {
   cctx.clearRect(0, 0, W, H);
   octx.clearRect(0, 0, W, H);
+  if (lm) missed = 0; else if (++missed > MISS_GRACE) sm = null;   // brief dropouts keep the stroke alive
+  lm = smooth(lm);
   if (!split) { preview(lm); return; }   // before the canvas is shown: pinch detector only
-  if (!lm) { pinching = false; last = null; visibleFrames = 0; pinchFrames = 0; return; }
+  if (!lm) {
+    if (missed > MISS_GRACE) { pinching = false; last = null; visibleFrames = 0; pinchFrames = 0; }
+    return;
+  }
 
   const thumb = lm[4], index = lm[8];   // fingertip landmarks
 
@@ -277,11 +302,14 @@ function handle(lm) {
   visibleFrames++;
 
   // Both fingertips must be inside the detection circle (centered on their midpoint) to pinch
-  pinching = visibleFrames >= STABLE_FRAMES && pinchHalf(lm) <= (pinching ? PINCH_R_OFF : PINCH_R);
+  const inside = pinchHalf(lm) <= (pinching ? PINCH_R_OFF : PINCH_R);
+  releaseFrames = (pinching && !inside) ? releaseFrames + 1 : 0;   // debounce: one noisy frame won't lift the pen
+  pinching = visibleFrames >= STABLE_FRAMES && (inside || (pinching && releaseFrames < RELEASE_FRAMES));
 
   // Pinch point = midpoint of thumb & index tips; x flipped to match the mirrored camera
-  const tx = (1 - (thumb.x + index.x) / 2) * W;
-  const ty = ((thumb.y + index.y) / 2) * H;
+  // Clamped so a fingertip slightly past the frame edge still draws on the canvas edge
+  const tx = Math.min(W, Math.max(0, (1 - (thumb.x + index.x) / 2) * W));
+  const ty = Math.min(H, Math.max(0, ((thumb.y + index.y) / 2) * H));
 
   if (!pinching) {
     sx = tx; sy = ty; last = null; pinchFrames = 0;   // pen up: cursor follows exactly
