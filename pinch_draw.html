@@ -116,8 +116,9 @@
 
 <script type="module">
 // MediaPipe Tasks Vision (pinned version) provides the hand tracking model
-import { HandLandmarker, FilesetResolver } from
-  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+// Loaded with dynamic import() in the background (NOT a static import), so the page's code, including the
+// Start button, runs immediately instead of waiting for this download to finish.
+const mediapipePromise = import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
 
 // All overlay/drawing canvases share one 1280x720 coordinate space, so camera positions map 1:1 to the canvas
 const W = 1280, H = 720;
@@ -215,13 +216,19 @@ $("save").onclick = () => {
 };
 
 // ---- Setup ----
-// Load the hand model in the background while the title screen is showing
-const landmarkerPromise = (async () => {
+// The hand model is only *initialized* after Start is pressed. Initializing it (WebAssembly + GPU shader compile)
+// can freeze the page for a couple of seconds, which made the Start button unresponsive when done at page load.
+// Instead, the model FILE is downloaded quietly while the title screen shows, so init is fast after Start.
+const MODEL_URL = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
+(window.requestIdleCallback || setTimeout)(() => fetch(MODEL_URL).catch(() => {}));
+let landmarkerPromise = null;
+const loadLandmarker = () => landmarkerPromise ||= (async () => {
+  const { HandLandmarker, FilesetResolver } = await mediapipePromise;
   const fileset = await FilesetResolver.forVisionTasks(
     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
   const lm = await HandLandmarker.createFromOptions(fileset, {
     baseOptions: {
-      modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+      modelAssetPath: MODEL_URL,
       delegate: "GPU"
     },
     runningMode: "VIDEO",
@@ -235,12 +242,12 @@ const landmarkerPromise = (async () => {
   try { lm.detectForVideo(c, performance.now()); } catch (e) {}
   return lm;
 })();
-landmarkerPromise.catch(() => {});
 
 // Runs when Start is pressed: asks for the camera, then starts the tracking loop
 async function init() {
   // Called when the user presses Start: only now does the browser ask for the camera
   $("start").disabled = true; $("start").textContent = "Starting…";
+  loadLandmarker().catch(() => {});   // start loading the model now, in parallel with the camera permission prompt
   statusEl.textContent = "Requesting camera…";
   video.muted = true; video.playsInline = true;
   const stream = await navigator.mediaDevices.getUserMedia({
