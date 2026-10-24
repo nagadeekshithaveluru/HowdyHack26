@@ -4,7 +4,7 @@ Draw in the air. Pinch your thumb and index finger together in front of your web
 
 Everything runs in your browser. Your video never leaves your computer.
 
-**Try it:** https://YOUR-USERNAME.github.io/pinch-draw/
+**Try it:** https://samarthxmathur.github.io/HowdyHack26/
 
 ## How to use
 
