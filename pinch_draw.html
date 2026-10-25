@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,67 +6,59 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pinch Paint</title>
 
-
-
-
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
 
-
-
-
 <style>
 :root{
-  --deep:#082533;
-  --teal:#176a75;
-  --foam:#effdf7;
   --paper:#fffdf8;
   --coral:#f47d5c;
   --gold:#ffd166;
   --mint:#75f1c5;
-  --panel:rgba(6,47,62,.84);
+  --panel:rgba(6,47,62,.88);
 }
 *{box-sizing:border-box}
 html,body{
   min-height:100%;
   margin:0;
-  color:var(--foam);
+  color:#effdf7;
   font-family:ui-rounded,"Nunito",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:
-    radial-gradient(circle at 12% 5%,rgba(122,243,230,.18),transparent 20%),
-    radial-gradient(circle at 88% 20%,rgba(122,243,230,.12),transparent 22%),
-    linear-gradient(180deg,#187c82 0%,#0d4c5b 48%,#082534 100%);
 }
 body{
   display:flex;
+  min-height:100vh;
   flex-direction:column;
-  align-items:center;
   overflow-x:hidden;
-  background:none;
+  background:#0c4b58;
 }
-body::before,body::after{
-  content:"";
+body::before,
+body::after{
   position:fixed;
-  left:50%;
   bottom:0;
+  content:"";
+  pointer-events:none;
+}
+body::before{
+  inset:0;
+  z-index:-3;
+  background:linear-gradient(180deg,#3eaaae,#2b8a93 25%,#17606c 50%,#0e3f4c 75%,#082b39);
+}
+body::after{
+  left:50%;
   z-index:-2;
   width:max(100vw,calc(100vh * 769 / 454));
   height:max(100vh,calc(100vw * 454 / 769));
   transform:translateX(-50%);
-  pointer-events:none;
-}
-body::before{
-  left:0;
-  width:100vw;
-  height:100vh;
-  transform:none;
-  background:linear-gradient(180deg,#3eaaae 0%,#2b8a93 25%,#17606c 50%,#0e3f4c 75%,#0a2c3b 100%);
-}
-body::after{
   background:url("https://api.builder.io/api/v1/image/assets/TEMP/cf85875c9cd69e8098f17e0ff35bde0ce8a1e7e5?width=1538") center bottom/100% 100% no-repeat;
-  -webkit-mask:linear-gradient(#000 0 0),linear-gradient(#000 0 0) 52.2% 72.5%/68.2% 72% no-repeat;
+
+  /* Makes the centre white background area visible */
+  -webkit-mask:
+    linear-gradient(#000 0 0),
+    linear-gradient(#000 0 0) 52.2% 72.5%/68.2% 72% no-repeat;
   -webkit-mask-composite:xor;
-  mask:linear-gradient(#000 0 0),linear-gradient(#000 0 0) 52.2% 72.5%/68.2% 72% no-repeat;
+  mask:
+    linear-gradient(#000 0 0),
+    linear-gradient(#000 0 0) 52.2% 72.5%/68.2% 72% no-repeat;
   mask-composite:exclude;
 }
 button,input{font:inherit}
@@ -73,60 +66,48 @@ button{cursor:pointer}
 button:disabled{opacity:.55;cursor:not-allowed}
 .hidden{display:none!important}
 
+/* ================= TITLE ================= */
 
-
-
-/* TITLE */
 #title{
   position:fixed;
   inset:0;
   z-index:100;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  display:grid;
+  place-items:center;
   overflow:hidden;
   background:linear-gradient(180deg,#3aaaad,#2b8a92 25%,#17606c 50%,#0e3f4c 72%,#0a2230 88%,#0a1621);
-  transition:opacity .35s;
+  transition:opacity .35s ease;
 }
 #title.gone{opacity:0;pointer-events:none}
 #title-art{
   --title-image:url("https://api.builder.io/api/v1/image/assets/TEMP/3395c80f62728047cfac48044910f6c8cf10edce?width=3748");
-  position:absolute;
-  left:50%;
-  top:50%;
+  position:relative;
   width:min(100vw,calc(100vh * 1568 / 1227));
   height:min(100vh,calc(100vw * 1227 / 1568));
-  transform:translate(-50%,-50%);
   background:var(--title-image) center/100% 100% no-repeat;
 }
 .seaweed-sway{
   position:absolute;
   inset:0;
   background:var(--title-image) center/100% 100% no-repeat;
-  transform-origin:50% 100%;
   pointer-events:none;
-  -webkit-mask-image:linear-gradient(0deg,#000 55%,transparent);
-  mask-image:linear-gradient(0deg,#000 55%,transparent);
-  will-change:transform;
+  transform-origin:50% 100%;
 }
 .seaweed-left{
   clip-path:polygon(0 28%,20% 28%,20% 70%,27% 85%,27% 100%,0 100%);
-  animation:seaweedSwayLeft 5s ease-in-out infinite alternate;
+  animation:seaweedLeft 5s ease-in-out infinite alternate;
 }
 .seaweed-right{
   clip-path:polygon(78% 8%,100% 8%,100% 100%,82% 100%,82% 58%,78% 58%);
-  animation:seaweedSwayRight 6s ease-in-out -2s infinite alternate;
+  animation:seaweedRight 6s ease-in-out -2s infinite alternate;
 }
-@keyframes seaweedSwayLeft{
+@keyframes seaweedLeft{
   from{transform:skewX(-.9deg) translateX(-2px)}
   to{transform:skewX(.9deg) translateX(2px)}
 }
-@keyframes seaweedSwayRight{
+@keyframes seaweedRight{
   from{transform:skewX(.8deg) translateX(2px)}
   to{transform:skewX(-.8deg) translateX(-2px)}
-}
-@media(prefers-reduced-motion:reduce){
-  .seaweed-sway{animation:none}
 }
 #start{
   position:absolute;
@@ -139,42 +120,104 @@ button:disabled{opacity:.55;cursor:not-allowed}
   background:transparent;
   font-size:0;
 }
-#start:hover{background:rgba(255,255,255,.12)}
+#start:hover{background:rgba(255,255,255,.14)}
 #title small{
   position:absolute;
+  right:0;
   bottom:12px;
   left:0;
-  right:0;
   color:#ffb1ba;
   font-size:13px;
   font-weight:700;
   text-align:center;
 }
 
+/* ================= MODE PICKER ================= */
 
+#mode-picker{
+  position:fixed;
+  inset:0;
+  z-index:110;
+  display:none;
+  place-items:center;
+  padding:20px;
+  background:rgba(3,27,38,.75);
+  backdrop-filter:blur(10px);
+}
+#mode-picker.show{display:grid}
+.mode-card{
+  width:min(760px,100%);
+  padding:clamp(24px,4vw,42px);
+  border:3px solid rgba(208,255,244,.72);
+  border-radius:32px;
+  text-align:center;
+  background:linear-gradient(145deg,#0d5866,#073845);
+  box-shadow:0 24px 60px rgba(0,0,0,.48);
+}
+.mode-card h2{
+  margin:0;
+  color:#fff;
+  font-size:clamp(29px,5vw,51px);
+}
+.mode-card>p{
+  margin:10px auto 25px;
+  max-width:560px;
+  color:#c8fff5;
+  font-weight:700;
+  line-height:1.5;
+}
+.mode-options{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+}
+.mode-button{
+  min-height:190px;
+  padding:22px;
+  border:3px solid rgba(255,255,255,.32);
+  border-radius:24px;
+  color:#eafff9;
+  text-align:left;
+  background:rgba(255,255,255,.1);
+  transition:.18s ease;
+}
+.mode-button:hover{
+  border-color:var(--gold);
+  background:rgba(117,241,197,.18);
+  transform:translateY(-4px);
+}
+.mode-icon{display:block;margin-bottom:8px;font-size:42px}
+.mode-button strong{display:block;color:#fff;font-size:22px}
+.mode-button span:last-child{
+  display:block;
+  margin-top:7px;
+  color:#c6f8ef;
+  font-size:13px;
+  font-weight:700;
+  line-height:1.45;
+}
 
+/* ================= APP ================= */
 
-/* APP */
 .app-header{
   position:sticky;
   top:0;
   z-index:20;
   display:flex;
-  width:min(1400px,100%);
+  width:100%;
   align-items:center;
   justify-content:space-between;
   gap:14px;
   padding:13px 20px;
   border-bottom:1px solid rgba(167,242,231,.2);
-  background:rgba(5,35,48,.91);
+  background:rgba(5,35,48,.93);
   box-shadow:0 8px 20px rgba(0,0,0,.16);
   backdrop-filter:blur(13px);
 }
 .brand{display:flex;align-items:center;gap:10px}
 .brand-bubble{
   display:grid;
-  width:42px;
-  height:42px;
+  width:42px;height:42px;
   place-items:center;
   border:2px solid rgba(255,255,255,.72);
   border-radius:50%;
@@ -203,8 +246,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
   position:relative;
   width:min(1400px,100%);
   min-height:calc(100vh - 68px);
+  margin:auto;
   padding:20px;
-  overflow:hidden;
 }
 .bubble-field{
   position:fixed;
@@ -235,10 +278,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
   to{transform:translateY(-115vh) translateX(32px) scale(1.2);opacity:0}
 }
 
+/* ================= PROMPT ================= */
 
-
-
-/* PROMPT */
 #prompt-overlay{
   position:fixed;
   inset:0;
@@ -261,22 +302,10 @@ button:disabled{opacity:.55;cursor:not-allowed}
   color:#163c49;
   background:linear-gradient(135deg,#fffdf5,#dffff6);
   box-shadow:0 14px 35px rgba(0,0,0,.35),inset 4px 4px 0 rgba(255,255,255,.9);
-  transform:translateY(-180px) rotate(-5deg);
-}
-#prompt-overlay.show #falling-prompt{
-  animation:promptFall 1.1s cubic-bezier(.16,.9,.2,1.15) forwards;
-}
-@keyframes promptFall{
-  0%{opacity:0;transform:translateY(-220px) rotate(-10deg) scale(.72)}
-  55%{opacity:1;transform:translateY(16px) rotate(2deg) scale(1.04)}
-  73%{transform:translateY(-8px) rotate(-1deg) scale(.99)}
-  100%{transform:translateY(0) rotate(0) scale(1)}
 }
 .prompt-shell{
   display:grid;
-  width:55px;
-  height:55px;
-  flex:0 0 auto;
+  width:55px;height:55px;
   place-items:center;
   border-radius:50%;
   font-size:28px;
@@ -294,13 +323,19 @@ button:disabled{opacity:.55;cursor:not-allowed}
   display:block;
   color:#df7350;
   font-size:clamp(27px,5vw,46px);
-  line-height:1.1;
+}
+#prompt-overlay.show #falling-prompt{
+  animation:promptFall 1.1s cubic-bezier(.16,.9,.2,1.15) forwards;
+}
+@keyframes promptFall{
+  0%{opacity:0;transform:translateY(-220px) rotate(-10deg) scale(.72)}
+  55%{opacity:1;transform:translateY(16px) rotate(2deg) scale(1.04)}
+  73%{transform:translateY(-8px) rotate(-1deg) scale(.99)}
+  100%{transform:translateY(0) rotate(0) scale(1)}
 }
 
+/* ================= SOLO ================= */
 
-
-
-/* STAGE */
 #stage{
   display:grid;
   width:100%;
@@ -308,27 +343,6 @@ button:disabled{opacity:.55;cursor:not-allowed}
   gap:18px;
   align-items:start;
 }
-#stage:not(.split){
-  --art-width:max(100vw,calc(100vh * 769 / 454));
-  --art-height:max(100vh,calc(100vw * 454 / 769));
-  display:block;
-  height:calc(100vh - var(--art-height) * .077);
-}
-#stage:not(.split) #cam-pane{
-  position:fixed;
-  left:calc(50vw - var(--art-width) * .334 + .5in);
-  top:calc(100vh - var(--art-height) * .797 + .5in);
-  width:calc(var(--art-width) * .682 - 1in);
-  height:calc(var(--art-height) * .72 - 1in);
-  aspect-ratio:auto;
-  max-width:none;
-  margin:0;
-  border-radius:0;
-  border-width:0;
-  box-shadow:none;
-}
-#stage:not(.split) .cam-window{border-radius:0}
-#stage:not(.split) #canvas-pane{display:none}
 .pane{
   position:relative;
   min-width:0;
@@ -367,7 +381,9 @@ button:disabled{opacity:.55;cursor:not-allowed}
   overflow:hidden;
   border-radius:21px;
 }
-.cam-window>video,.cam-window>canvas,#canvas-pane>canvas{
+.cam-window>video,
+.cam-window>canvas,
+#canvas-pane>canvas{
   position:absolute;
   inset:0;
   width:100%;
@@ -378,7 +394,6 @@ button:disabled{opacity:.55;cursor:not-allowed}
   object-fit:fill;
   background:#06131b;
   transform:scaleX(-1);
-  transition:opacity .2s;
 }
 #cam-overlay{z-index:4}
 #draw,#cursor{
@@ -398,8 +413,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 #cursor{z-index:3;pointer-events:none}
 .tag{
   position:absolute;
-  top:11px;
-  left:11px;
+  top:11px;left:11px;
   z-index:8;
   padding:6px 10px;
   border:1px solid rgba(255,255,255,.28);
@@ -414,12 +428,10 @@ button:disabled{opacity:.55;cursor:not-allowed}
 #canvas-pane .tag{color:#185362;background:rgba(255,255,255,.82)}
 #detector{
   position:absolute;
-  top:13px;
-  right:13px;
+  top:13px;right:13px;
   z-index:10;
   display:grid;
-  width:45px;
-  height:45px;
+  width:45px;height:45px;
   place-items:center;
   border:3px solid rgba(255,255,255,.9);
   border-radius:50%;
@@ -431,8 +443,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 #stage.split #detector{display:none}
 #status{
   position:absolute;
-  bottom:11px;
-  left:11px;
+  bottom:11px;left:11px;
   z-index:9;
   max-width:calc(100% - 22px);
   padding:8px 11px;
@@ -443,6 +454,132 @@ button:disabled{opacity:.55;cursor:not-allowed}
   font-weight:800;
   background:rgba(2,23,32,.75);
 }
+
+/* SOLO PRE-PINCH: camera fills the white cut-out area */
+#stage:not(.split){
+  --art-width:max(100vw,calc(100vh * 769 / 454));
+  --art-height:max(100vh,calc(100vw * 454 / 769));
+  display:block;
+  width:100%;
+  max-width:none;
+  height:calc(100vh - var(--art-height) * .077);
+  margin:0;
+}
+#stage:not(.split) #cam-pane{
+  position:fixed;
+  z-index:5;
+  left:calc(50vw - var(--art-width) * .334 + .5in);
+  top:calc(100vh - var(--art-height) * .797 + .5in);
+  width:calc(var(--art-width) * .682 - 1in);
+  height:calc(var(--art-height) * .72 - 1in);
+  max-width:none;
+  margin:0;
+  aspect-ratio:auto;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+}
+#stage:not(.split) .cam-window{border-radius:0}
+#stage:not(.split) #canvas-pane{display:none}
+#stage:not(.split) #cam-pane.ok{
+  border:0;
+  box-shadow:inset 0 0 0 5px rgba(117,241,197,.7);
+}
+#stage.split{
+  display:grid;
+  width:100%;
+  max-width:none;
+  height:auto;
+  margin:0;
+}
+
+/* ================= DUO ================= */
+
+#duo-stage{
+  display:none;
+  width:100%;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px;
+}
+.duo-mode #stage,
+.duo-mode #pinch-check-card,
+.duo-mode .solo-only{display:none!important}
+.duo-mode #duo-stage{display:grid}
+.duo-player{
+  position:relative;
+  min-width:0;
+  padding:12px;
+  border:3px solid rgba(255,241,204,.82);
+  border-radius:25px;
+  background:linear-gradient(135deg,#81d9d1,#399aa9);
+  box-shadow:0 12px 28px rgba(0,0,0,.25);
+}
+.player-one{border-color:rgba(255,209,102,.92)}
+.player-two{border-color:rgba(117,241,197,.92)}
+.duo-player-heading{
+  position:absolute;
+  top:18px;left:18px;
+  z-index:12;
+  padding:7px 11px;
+  border-radius:999px;
+  color:#fff;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.7px;
+  text-transform:uppercase;
+  background:rgba(2,28,39,.76);
+}
+.duo-camera,.duo-board{
+  position:relative;
+  aspect-ratio:16/10;
+  overflow:hidden;
+  border-radius:17px;
+}
+.duo-camera{
+  border:3px solid rgba(255,255,255,.64);
+  background:#061b26;
+}
+.duo-board{
+  margin-top:12px;
+  border:3px solid rgba(255,248,220,.95);
+  background:
+    radial-gradient(circle at 18px 18px,rgba(84,190,194,.12) 0 2px,transparent 3px),
+    var(--paper);
+  background-size:35px 35px;
+}
+.duo-camera canvas,.duo-board canvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+.duo-status{
+  position:absolute;
+  bottom:8px;left:8px;
+  z-index:4;
+  max-width:calc(100% - 16px);
+  padding:6px 9px;
+  border-radius:10px;
+  color:#fff;
+  font-size:11px;
+  font-weight:800;
+  background:rgba(2,23,32,.78);
+}
+.duo-tools{
+  display:none;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:9px;
+  margin-top:17px;
+  padding:12px;
+  border:1px solid rgba(184,245,236,.25);
+  border-radius:21px;
+  background:var(--panel);
+}
+.duo-mode .duo-tools{display:flex}
+
+/* ================= CONTROLS ================= */
+
 #pinch-check-card{
   max-width:590px;
   margin:15px auto 0;
@@ -456,11 +593,6 @@ button:disabled{opacity:.55;cursor:not-allowed}
 #pinch-check-card .fish-row{margin-bottom:5px;font-size:22px;letter-spacing:5px}
 #pinch-check-card b{display:block;color:var(--gold);font-size:14px}
 #pinch-check-card span{color:#c3f3ea;font-size:12px;font-weight:700}
-
-
-
-
-/* CONTROLS */
 .draw-only{display:none}
 .drawing-mode .draw-only{display:flex}
 .drawing-mode .draw-only.block{display:block}
@@ -478,18 +610,13 @@ button:disabled{opacity:.55;cursor:not-allowed}
 }
 #swatches{flex-wrap:wrap;justify-content:center;gap:9px}
 .swatch{
-  position:relative;
-  width:34px;
-  height:34px;
+  width:34px;height:34px;
   padding:0;
   border:3px solid rgba(255,255,255,.45);
   border-radius:50%;
   box-shadow:inset 5px 5px 0 rgba(255,255,255,.29),0 3px 7px rgba(0,0,0,.23);
 }
-.swatch.on{
-  border-color:#fff;
-  box-shadow:0 0 0 3px var(--gold),inset 5px 5px 0 rgba(255,255,255,.29);
-}
+.swatch.on{border-color:#fff;box-shadow:0 0 0 3px var(--gold),inset 5px 5px 0 rgba(255,255,255,.29)}
 .swatch.preview{animation:previewGlow .8s ease-in-out infinite alternate}
 @keyframes previewGlow{
   from{box-shadow:0 0 0 2px white,0 0 8px 3px rgba(117,241,197,.6)}
@@ -527,22 +654,42 @@ button:disabled{opacity:.55;cursor:not-allowed}
 #color-help b{color:var(--gold)}
 .tip{
   margin:12px auto 20px;
-  color:#b7ebe3;
+  color:#d9fff7;
   font-size:12px;
   font-weight:700;
   text-align:center;
 }
+#duo-help{display:none}
+.duo-mode #duo-help{display:block}
+
 @media(max-width:830px){
   #top-status{display:none}
   .workspace{padding:14px}
-  #stage.split{grid-template-columns:1fr}
-  #cam-pane{max-width:610px;margin:auto}
+  #stage.split,#duo-stage,.mode-options{grid-template-columns:1fr}
+
+  /* On smaller screens use a normal responsive camera card */
+  #stage:not(.split){
+    display:flex;
+    width:100%;
+    max-width:610px;
+    height:auto;
+    margin:38px auto 0;
+  }
+  #stage:not(.split) #cam-pane{
+    position:relative;
+    top:auto;left:auto;
+    width:100%;
+    height:auto;
+    aspect-ratio:16/10;
+    border:3px solid rgba(135,239,221,.65);
+    border-radius:24px;
+    box-shadow:0 10px 25px rgba(0,0,0,.23);
+  }
+  #stage:not(.split) .cam-window{border-radius:21px}
+  .duo-player{width:100%;max-width:620px;margin:auto}
 }
 </style>
 </head>
-
-
-
 
 <body>
 <div id="title">
@@ -554,8 +701,26 @@ button:disabled{opacity:.55;cursor:not-allowed}
   </div>
 </div>
 
+<div id="mode-picker" aria-label="Choose drawing mode">
+  <div class="mode-card">
+    <h2>Howdy, artist! ✦</h2>
+    <p>Choose a drawing mode. Practice by yourself, or challenge a friend with one webcam and fingertip drawing.</p>
 
+    <div class="mode-options">
+      <button class="mode-button" id="solo-mode-button">
+        <span class="mode-icon">✎</span>
+        <strong>Solo Quick Draw</strong>
+        <span>One camera, one sketchbook, and all normal pinch-paint features.</span>
+      </button>
 
+      <button class="mode-button" id="duo-mode-button">
+        <span class="mode-icon">✦ ✦</span>
+        <strong>Double Drawdown</strong>
+        <span>Player 1 owns the left side. Player 2 owns the right side.</span>
+      </button>
+    </div>
+  </div>
+</div>
 
 <header class="app-header">
   <div class="brand">
@@ -568,18 +733,12 @@ button:disabled{opacity:.55;cursor:not-allowed}
   <div id="top-status">🫧 Start your adventure</div>
 </header>
 
-
-
-
 <main class="workspace" id="workspace">
   <div class="bubble-field" aria-hidden="true">
     <span class="bubble"></span><span class="bubble"></span><span class="bubble"></span>
     <span class="bubble"></span><span class="bubble"></span><span class="bubble"></span>
     <span class="bubble"></span>
   </div>
-
-
-
 
   <div id="prompt-overlay" aria-live="polite">
     <div id="falling-prompt">
@@ -591,9 +750,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
     </div>
   </div>
 
-
-
-
+  <!-- SOLO MODE -->
   <section id="stage">
     <div class="pane" id="cam-pane">
       <div class="cam-window">
@@ -605,9 +762,6 @@ button:disabled{opacity:.55;cursor:not-allowed}
       </div>
     </div>
 
-
-
-
     <div class="pane" id="canvas-pane">
       <canvas id="draw" width="1280" height="720"></canvas>
       <canvas id="cursor" width="1280" height="720"></canvas>
@@ -615,31 +769,52 @@ button:disabled{opacity:.55;cursor:not-allowed}
     </div>
   </section>
 
+  <!-- TWO PLAYER MODE -->
+  <section id="duo-stage">
+    <article class="duo-player player-one">
+      <div class="duo-player-heading">🐠 Player 1 · Left Side</div>
 
+      <div class="duo-camera">
+        <canvas id="duo-cam-left" width="1280" height="720"></canvas>
+        <canvas id="duo-overlay-left" width="1280" height="720"></canvas>
+        <div class="duo-status" id="duo-status-left">Waiting for Player 1…</div>
+      </div>
 
+      <div class="duo-board">
+        <canvas id="duo-draw-left" width="1280" height="720"></canvas>
+        <canvas id="duo-cursor-left" width="1280" height="720"></canvas>
+      </div>
+    </article>
 
-  <section id="pinch-check-card">
+    <article class="duo-player player-two">
+      <div class="duo-player-heading">🐟 Player 2 · Right Side</div>
+
+      <div class="duo-camera">
+        <canvas id="duo-cam-right" width="1280" height="720"></canvas>
+        <canvas id="duo-overlay-right" width="1280" height="720"></canvas>
+        <div class="duo-status" id="duo-status-right">Waiting for Player 2…</div>
+      </div>
+
+      <div class="duo-board">
+        <canvas id="duo-draw-right" width="1280" height="720"></canvas>
+        <canvas id="duo-cursor-right" width="1280" height="720"></canvas>
+      </div>
+    </article>
+  </section>
+
+  <section id="pinch-check-card" class="solo-only">
     <div class="fish-row">🐟 🫧 🐠</div>
     <b>Pinch Check</b>
     <span>Touch thumb and index together. Hold the green sparkle to open your sketchbook.</span>
   </section>
 
-
-
-
-  <section class="controls-card draw-only">
+  <section class="controls-card draw-only solo-only">
     <div id="swatches" class="draw-only"></div>
-
-
-
 
     <label class="size-control draw-only">
       🖌️ Size
       <input id="size" type="range" min="2" max="30" value="8">
     </label>
-
-
-
 
     <button class="tool active draw-only" id="bubble-toggle">🫧 Bubble paint</button>
     <button class="tool draw-only" id="video-toggle">👁 Hide camera</button>
@@ -647,24 +822,23 @@ button:disabled{opacity:.55;cursor:not-allowed}
     <button class="tool draw-only" id="save">⬇ Save PNG</button>
   </section>
 
+  <section class="duo-tools">
+    <button class="tool" id="duo-clear-left">🫧 Clear Player 1</button>
+    <button class="tool" id="duo-clear-right">🫧 Clear Player 2</button>
+    <button class="tool" id="duo-clear-both">🫧 Clear Both</button>
+    <button class="tool" id="duo-exit">← Back to Solo</button>
+  </section>
 
-
-
-  <div class="draw-only block" id="color-help">
+  <div class="draw-only block solo-only" id="color-help">
     <b>Hands-free colors:</b>
     ✊ Closed fist = Black · ☝️ 1 = Coral · ✌️ 2 = Orange · 3 = Yellow ·
     4 fingers = Green · 🤞 crossed index + middle = Blue.
     Hold the pose until its bubble glows, then give a <b>👍 thumbs-up</b> to lock it.
   </div>
 
-
-
-
-  <p class="tip" id="tip">🫧 Complete the pinch check above first.</p>
+  <p class="tip solo-only" id="tip">🫧 Complete the pinch check above first.</p>
+  <p class="tip" id="duo-help">✦ Player 1 draws on the left side; Player 2 draws on the right side. Pinch thumb + index to draw.</p>
 </main>
-
-
-
 
 <script type="module">
 import {
@@ -672,15 +846,9 @@ import {
   FilesetResolver
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
 
-
-
-
 const W = 1280;
 const H = 720;
 const $ = id => document.getElementById(id);
-
-
-
 
 const PROMPTS = [
   "fish","jellyfish","shark","octopus","sea turtle",
@@ -688,34 +856,27 @@ const PROMPTS = [
   "anchor","pirate ship","mermaid","coral reef","seashell"
 ];
 
-
-
-
 const COLORS = [
-  { name:"Black",    hex:"#111111", key:"ink" },
-  { name:"Coral",    hex:"#e95f5f", key:"coral" },
-  { name:"Orange",   hex:"#f97316", key:"orange" },
-  { name:"Sunshine", hex:"#f7c948", key:"yellow" },
-  { name:"Seaweed",  hex:"#1da56d", key:"green" },
-  { name:"Ocean",    hex:"#2d86e8", key:"blue" }
+  {name:"Black",hex:"#111111",key:"ink"},
+  {name:"Coral",hex:"#e95f5f",key:"coral"},
+  {name:"Orange",hex:"#f97316",key:"orange"},
+  {name:"Sunshine",hex:"#f7c948",key:"yellow"},
+  {name:"Seaweed",hex:"#1da56d",key:"green"},
+  {name:"Ocean",hex:"#2d86e8",key:"blue"}
 ];
-
-
-
 
 const video = $("cam");
 const stage = $("stage");
 const workspace = $("workspace");
-
-
-
-
 const dctx = $("draw").getContext("2d");
 const cctx = $("cursor").getContext("2d");
 const octx = $("cam-overlay").getContext("2d");
 
-
-
+let mode = "solo";
+let handLandmarker = null;
+let cameraStarted = false;
+let lastVideoTime = -1;
+let split = false;
 
 let color = COLORS[0].hex;
 let size = 8;
@@ -724,17 +885,6 @@ let showVideo = true;
 let currentPrompt = "";
 let promptTimer = null;
 
-
-
-
-let handLandmarker = null;
-let cameraStarted = false;
-let lastVideoTime = -1;
-let split = false;
-
-
-
-
 let smoothed = null;
 let missedFrames = 0;
 let previewPinching = false;
@@ -742,18 +892,10 @@ let previewFrames = 0;
 let pinching = false;
 let releaseFrames = 0;
 let lastPoint = null;
-
-
-
-
 let sx = W / 2;
 let sy = H / 2;
 let bubbleCounter = 0;
 
-
-
-
-/* Gesture/color state */
 let colorState = "ready";
 let gestureNumber = null;
 let gestureFrames = 0;
@@ -761,182 +903,28 @@ let pendingColor = null;
 let thumbsFrames = 0;
 let cooldownFrames = 0;
 
-
-
-
 const PINCH_ON = 22;
 const PINCH_OFF = 34;
 const OPEN_BOARD_FRAMES = 8;
 const RELEASE_FRAME_LIMIT = 3;
 const MISS_GRACE = 5;
-const SMOOTHING = 0.34;        /* lower = smoother */
-const DRAW_SMOOTHING = 0.34;   /* lower = smoother brush */
+const SMOOTHING = .34;
+const DRAW_SMOOTHING = .34;
 const COLOR_HOLD_FRAMES = 12;
 const THUMBS_HOLD_FRAMES = 8;
 const LOCK_COOLDOWN_FRAMES = 30;
 
-
-
-
 const swatchButtons = {};
 
-
-
-
-function setStatus(cameraMessage, headerMessage){
+function setStatus(cameraMessage,headerMessage){
   $("status").textContent = cameraMessage;
   $("top-status").textContent = headerMessage;
 }
-
-
-
-
-function selectPrompt(){
-  let next = PROMPTS[Math.floor(Math.random() * PROMPTS.length)];
-  if (PROMPTS.length > 1 && next === currentPrompt) {
-    next = PROMPTS[(PROMPTS.indexOf(next) + 1) % PROMPTS.length];
-  }
-  currentPrompt = next;
-  $("prompt-text").textContent = currentPrompt;
-}
-
-
-
-
-function dropPrompt(){
-  selectPrompt();
-
-
-
-
-  const overlay = $("prompt-overlay");
-  overlay.classList.remove("show");
-  void overlay.offsetWidth;
-  overlay.classList.add("show");
-
-
-
-
-  clearTimeout(promptTimer);
-  promptTimer = setTimeout(() => {
-    overlay.classList.remove("show");
-    setStatus(`🐟 Draw a ${currentPrompt}!`, "🐟 Prompt ready");
-  }, 2500);
-}
-
-
-
-
-function selectColor(item){
-  if (!item) return;
-
-
-
-
-  color = item.hex;
-  Object.values(swatchButtons).forEach(button => button.classList.remove("on"));
-  swatchButtons[item.key]?.classList.add("on");
-}
-
-
-
-
-COLORS.forEach((item,index) => {
-  const button = document.createElement("button");
-  button.className = `swatch${index === 0 ? " on" : ""}`;
-  button.style.background = item.hex;
-  button.title = item.name;
-  button.setAttribute("aria-label", `${item.name} paint`);
-
-
-
-
-  button.onclick = () => {
-    selectColor(item);
-    cancelColorPreview();
-    colorState = "ready";
-    setStatus(`🎨 ${item.name} selected`, `🎨 ${item.name} paint`);
-  };
-
-
-
-
-  $("swatches").appendChild(button);
-  swatchButtons[item.key] = button;
-});
-
-
-
-
-$("size").oninput = event => {
-  size = Number(event.target.value);
-};
-
-
-
-
-$("bubble-toggle").onclick = event => {
-  bubblePaint = !bubblePaint;
-  event.currentTarget.classList.toggle("active", bubblePaint);
-  event.currentTarget.textContent = bubblePaint
-    ? "🫧 Bubble paint"
-    : "✏️ Smooth paint";
-};
-
-
-
-
-$("video-toggle").onclick = event => {
-  showVideo = !showVideo;
-  video.style.opacity = showVideo ? "1" : "0";
-  event.currentTarget.textContent = showVideo
-    ? "👁 Hide camera"
-    : "👁 Show camera";
-};
-
-
-
-
-$("clear").onclick = () => {
-  dctx.clearRect(0,0,W,H);
-  lastPoint = null;
-};
-
-
-
-
-$("save").onclick = () => {
-  const output = document.createElement("canvas");
-  output.width = W;
-  output.height = H;
-
-
-
-
-  const out = output.getContext("2d");
-  out.fillStyle = "#fffdf8";
-  out.fillRect(0,0,W,H);
-  out.drawImage($("draw"),0,0);
-
-
-
-
-  const link = document.createElement("a");
-  link.download = `pinch-paint-${currentPrompt.replaceAll(" ","-")}.png`;
-  link.href = output.toDataURL("image/png");
-  link.click();
-};
-
-
-
 
 function hexToRgba(hex,alpha){
   const value = hex.slice(1);
   return `rgba(${parseInt(value.slice(0,2),16)},${parseInt(value.slice(2,4),16)},${parseInt(value.slice(4,6),16)},${alpha})`;
 }
-
-
-
 
 function ring(ctx,x,y,radius,stroke,fill=null){
   ctx.lineWidth = 3;
@@ -944,9 +932,6 @@ function ring(ctx,x,y,radius,stroke,fill=null){
   ctx.beginPath();
   ctx.arc(x,y,radius,0,Math.PI * 2);
   ctx.stroke();
-
-
-
 
   if(fill){
     ctx.fillStyle = fill;
@@ -956,9 +941,6 @@ function ring(ctx,x,y,radius,stroke,fill=null){
   }
 }
 
-
-
-
 function pinchHalf(lm){
   return Math.hypot(
     (lm[4].x - lm[8].x) * W,
@@ -966,35 +948,19 @@ function pinchHalf(lm){
   ) / 2;
 }
 
-
-
-
 function fingersVisible(lm){
-  const margin = -0.05;
-  return [4,8].every(index => {
+  return !!lm && [4,8].every(index => {
     const point = lm[index];
-    return point.x > margin && point.x < 1 - margin &&
-           point.y > margin && point.y < 1 - margin;
+    return point.x > -.05 && point.x < 1.05 && point.y > -.05 && point.y < 1.05;
   });
 }
 
-
-
-
-/* Smooth every landmark to reduce tracker jitter. */
-function smoothLandmarks(lm){
+function smoothSolo(lm){
   if(!lm) return null;
 
-
-
-
   if(!smoothed){
-    smoothed = lm.map(point => ({
-      x:point.x,
-      y:point.y,
-      z:point.z || 0
-    }));
-  } else {
+    smoothed = lm.map(point => ({x:point.x,y:point.y,z:point.z || 0}));
+  }else{
     lm.forEach((point,index) => {
       smoothed[index].x += (point.x - smoothed[index].x) * SMOOTHING;
       smoothed[index].y += (point.y - smoothed[index].y) * SMOOTHING;
@@ -1002,22 +968,12 @@ function smoothLandmarks(lm){
     });
   }
 
-
-
-
   return smoothed;
 }
 
-
-
-
 function drawCameraMarkers(thumb,index,active){
-  const a = { x:(1 - thumb.x) * W, y:thumb.y * H };
-  const b = { x:(1 - index.x) * W, y:index.y * H };
-  const markerColor = active ? "#75f1c5" : "#ffd166";
-
-
-
+  const a = {x:(1 - thumb.x) * W,y:thumb.y * H};
+  const b = {x:(1 - index.x) * W,y:index.y * H};
 
   octx.strokeStyle = active ? "#75f1c5" : "rgba(255,255,255,.85)";
   octx.lineWidth = 3;
@@ -1026,177 +982,177 @@ function drawCameraMarkers(thumb,index,active){
   octx.lineTo(b.x,b.y);
   octx.stroke();
 
-
-
-
   for(const point of [a,b]){
-    octx.fillStyle = markerColor;
+    octx.fillStyle = active ? "#75f1c5" : "#ffd166";
     octx.beginPath();
     octx.arc(point.x,point.y,7,0,Math.PI * 2);
     octx.fill();
   }
 }
 
-
-
-
 function drawCursor(x,y,drawing){
   const radius = Math.max(size,8) + 6;
-
-
-
-
   ring(cctx,x,y,radius + 2,"rgba(0,0,0,.2)");
-  ring(
-    cctx,
-    x,
-    y,
-    radius,
-    drawing ? "#1da56d" : "#f7c948",
-    drawing ? color : null
-  );
+  ring(cctx,x,y,radius,drawing ? "#1da56d" : "#f7c948",drawing ? color : null);
 }
 
-
-
-
-function bubbleStamp(x,y){
+function bubbleStamp(ctx,x,y){
   const radius = Math.max(3,size * .42);
   const offsetX = (Math.random() - .5) * size * 1.4;
   const offsetY = (Math.random() - .5) * size * 1.4;
 
+  ctx.save();
+  ctx.lineWidth = Math.max(1,size * .12);
+  ctx.strokeStyle = hexToRgba(color,.55);
+  ctx.fillStyle = hexToRgba(color,.16);
 
+  ctx.beginPath();
+  ctx.arc(x + offsetX,y + offsetY,radius,0,Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
 
-
-  dctx.save();
-  dctx.lineWidth = Math.max(1,size * .12);
-  dctx.strokeStyle = hexToRgba(color,.55);
-  dctx.fillStyle = hexToRgba(color,.16);
-
-
-
-
-  dctx.beginPath();
-  dctx.arc(x + offsetX,y + offsetY,radius,0,Math.PI * 2);
-  dctx.fill();
-  dctx.stroke();
-
-
-
-
-  dctx.fillStyle = "rgba(255,255,255,.65)";
-  dctx.beginPath();
-  dctx.arc(
+  ctx.fillStyle = "rgba(255,255,255,.65)";
+  ctx.beginPath();
+  ctx.arc(
     x + offsetX - radius * .28,
     y + offsetY - radius * .28,
     Math.max(1,radius * .18),
     0,
     Math.PI * 2
   );
-  dctx.fill();
-  dctx.restore();
+  ctx.fill();
+  ctx.restore();
 }
 
+function drawInk(ctx,state,x,y){
+  if(!state.lastPoint){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x,y,size / 2,0,Math.PI * 2);
+    ctx.fill();
 
+    if(bubblePaint) bubbleStamp(ctx,x,y);
 
-
-function ink(x,y){
-  if(!lastPoint){
-    dctx.fillStyle = color;
-    dctx.beginPath();
-    dctx.arc(x,y,size / 2,0,Math.PI * 2);
-    dctx.fill();
-
-
-
-
-    if(bubblePaint) bubbleStamp(x,y);
-
-
-
-
-    lastPoint = {x,y};
-    bubbleCounter = 0;
+    state.lastPoint = {x,y};
+    state.bubbleCounter = 0;
     return;
   }
 
-
-
-
-  const movement = Math.hypot(x - lastPoint.x,y - lastPoint.y);
+  const movement = Math.hypot(x - state.lastPoint.x,y - state.lastPoint.y);
   if(movement < .7) return;
 
+  ctx.strokeStyle = color;
+  ctx.lineWidth = size;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  ctx.moveTo(state.lastPoint.x,state.lastPoint.y);
+  ctx.lineTo(x,y);
+  ctx.stroke();
 
+  state.bubbleCounter++;
 
+  if(bubblePaint && state.bubbleCounter % 3 === 0){
+    bubbleStamp(ctx,x,y);
+  }
 
-  dctx.strokeStyle = color;
-  dctx.lineWidth = size;
-  dctx.lineCap = "round";
-  dctx.lineJoin = "round";
-  dctx.beginPath();
-  dctx.moveTo(lastPoint.x,lastPoint.y);
-  dctx.lineTo(x,y);
-  dctx.stroke();
-
-
-
-
-  bubbleCounter++;
-  if(bubblePaint && bubbleCounter % 3 === 0) bubbleStamp(x,y);
-
-
-
-
-  lastPoint = {x,y};
+  state.lastPoint = {x,y};
 }
 
+function selectPrompt(){
+  let next = PROMPTS[Math.floor(Math.random() * PROMPTS.length)];
 
+  if(next === currentPrompt){
+    next = PROMPTS[(PROMPTS.indexOf(next) + 1) % PROMPTS.length];
+  }
 
-
-/* ---------- COLOR GESTURES ---------- */
-
-
-
-
-function dist(a,b){
-  return Math.hypot(a.x - b.x,a.y - b.y);
+  currentPrompt = next;
+  $("prompt-text").textContent = currentPrompt;
 }
 
+function dropPrompt(){
+  selectPrompt();
 
+  const overlay = $("prompt-overlay");
+  overlay.classList.remove("show");
+  void overlay.offsetWidth;
+  overlay.classList.add("show");
 
+  clearTimeout(promptTimer);
 
-function palmSize(lm){
-  return Math.max(dist(lm[0],lm[9]),dist(lm[5],lm[17]),.08);
+  promptTimer = setTimeout(() => {
+    overlay.classList.remove("show");
+    setStatus(`🐟 Draw a ${currentPrompt}!`,"🐟 Prompt ready");
+  },2500);
 }
 
+function selectColor(item){
+  color = item.hex;
 
+  Object.values(swatchButtons).forEach(button => button.classList.remove("on"));
+  swatchButtons[item.key]?.classList.add("on");
+}
 
+COLORS.forEach((item,index) => {
+  const button = document.createElement("button");
+  button.className = `swatch${index === 0 ? " on" : ""}`;
+  button.style.background = item.hex;
+  button.title = item.name;
 
-/*
-  This compares tip and PIP positions with a scale-aware threshold.
-  It is considerably more reliable than a fixed Y-only comparison.
-*/
-function fingerUp(lm,tip,pip){
+  button.onclick = () => {
+    selectColor(item);
+    cancelColorPreview();
+    colorState = "ready";
+    setStatus(`🎨 ${item.name} selected`,`🎨 ${item.name} paint`);
+  };
+
+  $("swatches").appendChild(button);
+  swatchButtons[item.key] = button;
+});
+
+$("size").oninput = event => size = Number(event.target.value);
+
+$("bubble-toggle").onclick = event => {
+  bubblePaint = !bubblePaint;
+  event.currentTarget.classList.toggle("active",bubblePaint);
+  event.currentTarget.textContent = bubblePaint ? "🫧 Bubble paint" : "✏️ Smooth paint";
+};
+
+$("video-toggle").onclick = event => {
+  showVideo = !showVideo;
+  video.style.opacity = showVideo ? "1" : "0";
+  event.currentTarget.textContent = showVideo ? "👁 Hide camera" : "👁 Show camera";
+};
+
+$("clear").onclick = () => {
+  dctx.clearRect(0,0,W,H);
+  lastPoint = null;
+};
+
+$("save").onclick = () => {
+  const output = document.createElement("canvas");
+  output.width = W;
+  output.height = H;
+
+  const out = output.getContext("2d");
+  out.fillStyle = "#fffdf8";
+  out.fillRect(0,0,W,H);
+  out.drawImage($("draw"),0,0);
+
+  const link = document.createElement("a");
+  link.download = `pinch-paint-${currentPrompt.replaceAll(" ","-")}.png`;
+  link.href = output.toDataURL("image/png");
+  link.click();
+};
+
+/* Solo color gestures */
+function dist(a,b){return Math.hypot(a.x - b.x,a.y - b.y)}
+function palmSize(lm){return Math.max(dist(lm[0],lm[9]),dist(lm[5],lm[17]),.08)}
+function fingerUp(lm,tip,pip){return lm[tip].y < lm[pip].y - palmSize(lm) * .13}
+function fingerFolded(lm,tip,pip){return lm[tip].y > lm[pip].y - palmSize(lm) * .025}
+
+function thumbsUp(lm){
   const scale = palmSize(lm);
-  return lm[tip].y < lm[pip].y - scale * .13;
-}
-
-
-
-
-function fingerFolded(lm,tip,pip){
-  const scale = palmSize(lm);
-  return lm[tip].y > lm[pip].y - scale * .025;
-}
-
-
-
-
-function isThumbsUp(lm){
-  const scale = palmSize(lm);
-
-
-
 
   return (
     lm[4].y < lm[3].y - scale * .28 &&
@@ -1208,125 +1164,50 @@ function isThumbsUp(lm){
   );
 }
 
-
-
-
-function crossedIndexMiddle(lm){
-  const indexUp = fingerUp(lm,8,6);
-  const middleUp = fingerUp(lm,12,10);
-
-
-
-
+function crossedFingers(lm){
   if(
-    !indexUp ||
-    !middleUp ||
+    !fingerUp(lm,8,6) ||
+    !fingerUp(lm,12,10) ||
     !fingerFolded(lm,16,14) ||
     !fingerFolded(lm,20,18)
-  ){
-    return false;
-  }
-
-
-
+  ) return false;
 
   const width = Math.max(dist(lm[5],lm[17]),.01);
-  const tipsClose = dist(lm[8],lm[12]) < width * .62;
+  const close = dist(lm[8],lm[12]) < width * .62;
+  const knuckle = Math.sign(lm[9].x - lm[5].x);
+  const tips = Math.sign(lm[12].x - lm[8].x);
 
-
-
-
-  /*
-    Works for either left or right hands:
-    if finger tip ordering reverses compared with knuckle ordering,
-    the fingers have crossed.
-  */
-  const knuckleDirection = Math.sign(lm[9].x - lm[5].x);
-  const tipDirection = Math.sign(lm[12].x - lm[8].x);
-  const swappedSides = knuckleDirection !== 0 &&
-                       tipDirection !== 0 &&
-                       knuckleDirection !== tipDirection;
-
-
-
-
-  return swappedSides || tipsClose;
+  return close || (knuckle !== 0 && tips !== 0 && knuckle !== tips);
 }
 
-
-
-
-function getColorGestureNumber(lm){
-  const indexUp = fingerUp(lm,8,6);
-  const middleUp = fingerUp(lm,12,10);
-  const ringUp = fingerUp(lm,16,14);
-  const pinkyUp = fingerUp(lm,20,18);
-
-
-
-
-  const raised =
-    Number(indexUp) +
-    Number(middleUp) +
-    Number(ringUp) +
-    Number(pinkyUp);
-
-
-
+function getColorGesture(lm){
+  const raised = [
+    fingerUp(lm,8,6),
+    fingerUp(lm,12,10),
+    fingerUp(lm,16,14),
+    fingerUp(lm,20,18)
+  ].filter(Boolean).length;
 
   const fist =
     fingerFolded(lm,8,6) &&
     fingerFolded(lm,12,10) &&
     fingerFolded(lm,16,14) &&
     fingerFolded(lm,20,18) &&
-    !isThumbsUp(lm);
-
-
-
+    !thumbsUp(lm);
 
   if(fist) return 0;
-  if(crossedIndexMiddle(lm)) return 5;
-  if(raised === 4) return 4;
-  if(raised === 3) return 3;
-  if(raised === 2) return 2;
-  if(raised === 1) return 1;
-
-
-
-
-  return null;
+  if(crossedFingers(lm)) return 5;
+  return raised >= 1 && raised <= 4 ? raised : null;
 }
 
-
-
-
 function colorForNumber(number){
-  const map = {
-    0:"ink",
-    1:"coral",
-    2:"orange",
-    3:"yellow",
-    4:"green",
-    5:"blue"
-  };
-
-
-
-
+  const map = {0:"ink",1:"coral",2:"orange",3:"yellow",4:"green",5:"blue"};
   return COLORS.find(item => item.key === map[number]) || null;
 }
 
-
-
-
 function clearPreviewGlow(){
-  Object.values(swatchButtons).forEach(button => {
-    button.classList.remove("preview");
-  });
+  Object.values(swatchButtons).forEach(button => button.classList.remove("preview"));
 }
-
-
-
 
 function cancelColorPreview(){
   pendingColor = null;
@@ -1335,125 +1216,51 @@ function cancelColorPreview(){
   thumbsFrames = 0;
   clearPreviewGlow();
 
-
-
-
-  if(colorState === "preview"){
-    colorState = "ready";
-  }
+  if(colorState === "preview") colorState = "ready";
 }
 
-
-
-
-function beginPreview(item){
-  pendingColor = item;
-  colorState = "preview";
-  thumbsFrames = 0;
-
-
-
-
-  clearPreviewGlow();
-  swatchButtons[item.key]?.classList.add("preview");
-
-
-
-
-  setStatus(
-    `🎨 ${item.name} ready — give 👍 to lock it!`,
-    `👍 Lock ${item.name}`
-  );
-}
-
-
-
-
-/*
-  Returns true whenever the hand is being used for color selection,
-  preventing accidental drawing while changing colors.
-*/
 function updateColors(lm){
   if(colorState === "locked"){
     cooldownFrames--;
 
-
-
-
-    if(cooldownFrames <= 0 && !isThumbsUp(lm)){
+    if(cooldownFrames <= 0 && !thumbsUp(lm)){
       colorState = "ready";
     }
-
-
-
 
     return true;
   }
 
-
-
-
   if(colorState === "preview"){
-    if(isThumbsUp(lm)){
+    if(thumbsUp(lm)){
       thumbsFrames++;
-
-
-
 
       if(thumbsFrames >= THUMBS_HOLD_FRAMES){
         const selected = pendingColor;
-
-
-
-
         selectColor(selected);
+
         pendingColor = null;
         thumbsFrames = 0;
         gestureFrames = 0;
         gestureNumber = null;
 
-
-
-
         clearPreviewGlow();
-
-
-
 
         colorState = "locked";
         cooldownFrames = LOCK_COOLDOWN_FRAMES;
 
-
-
-
-        setStatus(
-          `✨ ${selected.name} locked!`,
-          `🎨 ${selected.name} paint`
-        );
+        setStatus(`✨ ${selected.name} locked!`,`🎨 ${selected.name} paint`);
       }
-    } else {
+    }else{
       thumbsFrames = 0;
     }
-
-
-
 
     return true;
   }
 
+  if(thumbsUp(lm)) return true;
 
-
-
-  if(isThumbsUp(lm)) return true;
-
-
-
-
-  const number = getColorGestureNumber(lm);
+  const number = getColorGesture(lm);
   const item = colorForNumber(number);
-
-
-
 
   if(!item){
     gestureNumber = null;
@@ -1461,157 +1268,377 @@ function updateColors(lm){
     return false;
   }
 
-
-
-
   if(number === gestureNumber){
     gestureFrames++;
-  } else {
+  }else{
     gestureNumber = number;
     gestureFrames = 1;
   }
 
-
-
-
   if(gestureFrames >= COLOR_HOLD_FRAMES){
-    beginPreview(item);
+    pendingColor = item;
+    colorState = "preview";
+    thumbsFrames = 0;
+
+    clearPreviewGlow();
+    swatchButtons[item.key]?.classList.add("preview");
+
+    setStatus(`🎨 ${item.name} ready — give 👍 to lock it!`,`👍 Lock ${item.name}`);
   }
-
-
-
 
   return true;
 }
 
-
-
-
-/* ---------- PINCH CHECK ---------- */
-
-
-
-
 function runPinchCheck(lm){
-  let isPinched = false;
+  let active = false;
 
+  if(fingersVisible(lm)){
+    const distance = pinchHalf(lm);
 
-
-
-  if(lm && fingersVisible(lm)){
-    const gap = pinchHalf(lm);
-
-
-
-
-    previewPinching = gap <= (
+    previewPinching = distance <= (
       previewPinching ? PINCH_OFF : PINCH_ON
     );
 
+    active = previewPinching;
 
-
-
-    isPinched = previewPinching;
-
-
-
-
-    const thumb = lm[4];
-    const index = lm[8];
-
-
-
-
-    drawCameraMarkers(thumb,index,isPinched);
-
-
-
+    drawCameraMarkers(lm[4],lm[8],active);
 
     ring(
       octx,
-      (1 - ((thumb.x + index.x) / 2)) * W,
-      ((thumb.y + index.y) / 2) * H,
+      (1 - ((lm[4].x + lm[8].x) / 2)) * W,
+      ((lm[4].y + lm[8].y) / 2) * H,
       PINCH_ON,
-      isPinched ? "#75f1c5" : "#f47d5c"
+      active ? "#75f1c5" : "#f47d5c"
     );
-  } else {
+  }else{
     previewPinching = false;
   }
 
-
-
-
-  $("detector").classList.toggle("ok",isPinched);
-  $("cam-pane").classList.toggle("ok",isPinched);
-
-
-
+  $("detector").classList.toggle("ok",active);
+  $("cam-pane").classList.toggle("ok",active);
 
   setStatus(
-    isPinched ? "✨ Pinch spotted — hold it!" : "🫧 Touch thumb + index together",
-    isPinched ? "✨ Pinch found!" : "🫧 Pinch check"
+    active ? "✨ Pinch spotted — hold it!" : "🫧 Touch thumb + index together",
+    active ? "✨ Pinch found!" : "🫧 Pinch check"
   );
 
-
-
-
-  previewFrames = isPinched ? previewFrames + 1 : 0;
-
-
-
+  previewFrames = active ? previewFrames + 1 : 0;
 
   if(previewFrames >= OPEN_BOARD_FRAMES){
     split = true;
     stage.classList.add("split");
     workspace.classList.add("drawing-mode");
-
-
-
-
     $("pinch-check-card").classList.add("hidden");
-
-
-
 
     pinching = false;
     lastPoint = null;
     previewFrames = 0;
 
-
-
-
     dropPrompt();
-
-
-
-
-    $("tip").textContent =
-      "🫧 Watch the prompt drop, then pinch to begin drawing!";
+    $("tip").textContent = "🫧 Watch the prompt drop, then pinch to begin drawing!";
   }
 }
 
+function handleSolo(rawLandmarks){
+  cctx.clearRect(0,0,W,H);
+  octx.clearRect(0,0,W,H);
 
+  missedFrames = rawLandmarks ? 0 : missedFrames + 1;
 
+  if(!rawLandmarks && missedFrames > MISS_GRACE){
+    smoothed = null;
+    pinching = false;
+    lastPoint = null;
+    cancelColorPreview();
+    colorState = "ready";
+    cooldownFrames = 0;
 
-/* ---------- CAMERA / TRACKER ---------- */
+    if(split){
+      setStatus("🫧 Hand swam away — show it again","🫧 Hand not found");
+    }
+  }
 
+  const lm = smoothSolo(rawLandmarks);
 
+  if(!split){
+    runPinchCheck(lm);
+    return;
+  }
 
+  if(!fingersVisible(lm)) return;
+
+  const thumb = lm[4];
+  const index = lm[8];
+  const distance = pinchHalf(lm);
+
+  const inside = distance <= (
+    pinching ? PINCH_OFF : PINCH_ON
+  );
+
+  if(pinching && !inside){
+    releaseFrames++;
+  }else{
+    releaseFrames = 0;
+  }
+
+  pinching = inside || (
+    pinching && releaseFrames < RELEASE_FRAME_LIMIT
+  );
+
+  const targetX = Math.max(0,Math.min(W,(1 - ((thumb.x + index.x) / 2)) * W));
+  const targetY = Math.max(0,Math.min(H,((thumb.y + index.y) / 2) * H));
+
+  if(pinching){
+    sx += (targetX - sx) * DRAW_SMOOTHING;
+    sy += (targetY - sy) * DRAW_SMOOTHING;
+
+    drawInk(dctx,{
+      get lastPoint(){return lastPoint},
+      set lastPoint(value){lastPoint = value},
+      get bubbleCounter(){return bubbleCounter},
+      set bubbleCounter(value){bubbleCounter = value}
+    },sx,sy);
+
+    setStatus(
+      bubblePaint ? `🫧 Drawing ${currentPrompt}!` : `✨ Drawing ${currentPrompt}!`,
+      "✨ Painting"
+    );
+  }else{
+    const changingColor = updateColors(lm);
+
+    sx += (targetX - sx) * .5;
+    sy += (targetY - sy) * .5;
+    lastPoint = null;
+
+    if(!changingColor){
+      setStatus(`🫧 Draw a ${currentPrompt}!`,"🫧 Hand ready");
+    }
+  }
+
+  drawCursor(sx,sy,pinching);
+  drawCameraMarkers(thumb,index,pinching);
+}
+
+/* ================= DUO ================= */
+
+const duo = {
+  left:{
+    side:"left",
+    draw:$("duo-draw-left").getContext("2d"),
+    cursor:$("duo-cursor-left").getContext("2d"),
+    camera:$("duo-cam-left").getContext("2d"),
+    overlay:$("duo-overlay-left").getContext("2d"),
+    status:$("duo-status-left"),
+    smooth:null,
+    pinching:false,
+    releaseFrames:0,
+    lastPoint:null,
+    x:W / 2,
+    y:H / 2,
+    bubbleCounter:0
+  },
+  right:{
+    side:"right",
+    draw:$("duo-draw-right").getContext("2d"),
+    cursor:$("duo-cursor-right").getContext("2d"),
+    camera:$("duo-cam-right").getContext("2d"),
+    overlay:$("duo-overlay-right").getContext("2d"),
+    status:$("duo-status-right"),
+    smooth:null,
+    pinching:false,
+    releaseFrames:0,
+    lastPoint:null,
+    x:W / 2,
+    y:H / 2,
+    bubbleCounter:0
+  }
+};
+
+function smoothDuo(player,lm){
+  if(!lm){
+    player.smooth = null;
+    return null;
+  }
+
+  if(!player.smooth){
+    player.smooth = lm.map(point => ({x:point.x,y:point.y,z:point.z || 0}));
+  }else{
+    lm.forEach((point,index) => {
+      player.smooth[index].x += (point.x - player.smooth[index].x) * SMOOTHING;
+      player.smooth[index].y += (point.y - player.smooth[index].y) * SMOOTHING;
+    });
+  }
+
+  return player.smooth;
+}
+
+function renderDuoCamera(player){
+  const ctx = player.camera;
+  ctx.clearRect(0,0,W,H);
+
+  if(video.readyState < 2 || !video.videoWidth) return;
+
+  const sourceX = player.side === "left"
+    ? video.videoWidth / 2
+    : 0;
+
+  ctx.save();
+  ctx.translate(W,0);
+  ctx.scale(-1,1);
+
+  ctx.drawImage(
+    video,
+    sourceX,
+    0,
+    video.videoWidth / 2,
+    video.videoHeight,
+    0,
+    0,
+    W,
+    H
+  );
+
+  ctx.restore();
+}
+
+function getHandForSide(hands,side){
+  return hands.find(lm => {
+    const mirroredX = 1 - ((lm[4].x + lm[8].x) / 2);
+    return side === "left" ? mirroredX < .5 : mirroredX >= .5;
+  }) || null;
+}
+
+function duoMarkers(player,thumb,index,active){
+  const offset = player.side === "left" ? 0 : .5;
+
+  const thumbX = ((1 - thumb.x - offset) * 2) * W;
+  const indexX = ((1 - index.x - offset) * 2) * W;
+
+  const ctx = player.overlay;
+  ctx.strokeStyle = active ? "#75f1c5" : "rgba(255,255,255,.85)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(thumbX,thumb.y * H);
+  ctx.lineTo(indexX,index.y * H);
+  ctx.stroke();
+
+  for(const point of [
+    {x:thumbX,y:thumb.y * H},
+    {x:indexX,y:index.y * H}
+  ]){
+    ctx.fillStyle = active ? "#75f1c5" : "#ffd166";
+    ctx.beginPath();
+    ctx.arc(point.x,point.y,7,0,Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function handleDuoPlayer(player,rawLandmarks){
+  player.cursor.clearRect(0,0,W,H);
+  player.overlay.clearRect(0,0,W,H);
+
+  const lm = smoothDuo(player,rawLandmarks);
+
+  if(!fingersVisible(lm)){
+    player.pinching = false;
+    player.releaseFrames = 0;
+    player.lastPoint = null;
+    player.status.textContent = `Waiting for Player ${player.side === "left" ? "1" : "2"}…`;
+    return;
+  }
+
+  const thumb = lm[4];
+  const index = lm[8];
+  const distance = pinchHalf(lm);
+
+  const inside = distance <= (
+    player.pinching ? PINCH_OFF : PINCH_ON
+  );
+
+  if(player.pinching && !inside){
+    player.releaseFrames++;
+  }else{
+    player.releaseFrames = 0;
+  }
+
+  player.pinching = inside || (
+    player.pinching && player.releaseFrames < RELEASE_FRAME_LIMIT
+  );
+
+  const halfOffset = player.side === "left" ? 0 : .5;
+  const mirroredX = 1 - ((thumb.x + index.x) / 2);
+
+  const targetX = Math.max(0,Math.min(W,((mirroredX - halfOffset) * 2) * W));
+  const targetY = Math.max(0,Math.min(H,((thumb.y + index.y) / 2) * H));
+
+  if(player.pinching){
+    player.x += (targetX - player.x) * DRAW_SMOOTHING;
+    player.y += (targetY - player.y) * DRAW_SMOOTHING;
+
+    drawInk(player.draw,player,player.x,player.y);
+    player.status.textContent = "✨ Drawing!";
+  }else{
+    player.x += (targetX - player.x) * .5;
+    player.y += (targetY - player.y) * .5;
+    player.lastPoint = null;
+    player.status.textContent = "🫧 Ready — pinch to draw";
+  }
+
+  const radius = Math.max(size,8) + 6;
+  ring(player.cursor,player.x,player.y,radius + 2,"rgba(0,0,0,.2)");
+  ring(player.cursor,player.x,player.y,radius,player.pinching ? "#1da56d" : "#f7c948",player.pinching ? color : null);
+
+  duoMarkers(player,thumb,index,player.pinching);
+}
+
+function handleDuo(hands){
+  renderDuoCamera(duo.left);
+  renderDuoCamera(duo.right);
+
+  handleDuoPlayer(duo.left,getHandForSide(hands,"left"));
+  handleDuoPlayer(duo.right,getHandForSide(hands,"right"));
+
+  setStatus("✦ Double Drawdown — left and right zones are locked","✦ Double Drawdown");
+}
+
+function clearDuo(player){
+  player.draw.clearRect(0,0,W,H);
+  player.lastPoint = null;
+}
+
+$("duo-clear-left").onclick = () => clearDuo(duo.left);
+$("duo-clear-right").onclick = () => clearDuo(duo.right);
+$("duo-clear-both").onclick = () => {
+  clearDuo(duo.left);
+  clearDuo(duo.right);
+};
+
+$("duo-exit").onclick = () => {
+  mode = "solo";
+  workspace.classList.remove("duo-mode");
+
+  split = false;
+  stage.classList.remove("split");
+  workspace.classList.remove("drawing-mode");
+  $("pinch-check-card").classList.remove("hidden");
+
+  previewFrames = 0;
+  pinching = false;
+  lastPoint = null;
+
+  setStatus("Touch thumb + index together","🫧 Pinch check");
+};
+
+/* ================= CAMERA ================= */
 
 async function setupCamera(track){
   try{
     const caps = track.getCapabilities?.() || {};
     const advanced = {};
 
-
-
-
     if(caps.exposureMode?.includes("continuous")) advanced.exposureMode = "continuous";
     if(caps.focusMode?.includes("continuous")) advanced.focusMode = "continuous";
     if(caps.whiteBalanceMode?.includes("continuous")) advanced.whiteBalanceMode = "continuous";
-
-
-
 
     if(Object.keys(advanced).length){
       await track.applyConstraints({advanced:[advanced]});
@@ -1619,16 +1646,10 @@ async function setupCamera(track){
   }catch{}
 }
 
-
-
-
 async function loadTracker(){
   const vision = await FilesetResolver.forVisionTasks(
     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
   );
-
-
-
 
   return HandLandmarker.createFromOptions(vision,{
     baseOptions:{
@@ -1636,22 +1657,16 @@ async function loadTracker(){
       delegate:"GPU"
     },
     runningMode:"VIDEO",
-    numHands:1,
+    numHands:2,
     minHandDetectionConfidence:.45,
     minHandPresenceConfidence:.45,
     minTrackingConfidence:.45
   });
 }
 
-
-
-
 async function startApp(){
   $("start").disabled = true;
   setStatus("Requesting camera…","🫧 Waking the fish…");
-
-
-
 
   try{
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -1664,275 +1679,76 @@ async function startApp(){
       audio:false
     });
 
-
-
-
     await setupCamera(stream.getVideoTracks()[0]);
-
-
-
 
     video.srcObject = stream;
     await video.play();
 
-
-
-
     $("title").classList.add("gone");
 
-
-
-
     setStatus("Loading hand tracker…","🫧 Looking for your hand…");
-
-
-
 
     handLandmarker = await loadTracker();
     cameraStarted = true;
 
-
-
-
-    setStatus("Touch thumb + index together","🫧 Pinch check");
-
-
-
+    if(mode === "duo"){
+      workspace.classList.add("duo-mode");
+      setStatus("Waiting for both artists…","✦ Double Drawdown");
+    }else{
+      setStatus("Touch thumb + index together","🫧 Pinch check");
+    }
 
     requestAnimationFrame(loop);
   }catch(error){
     console.error(error);
-
-
-
-
     $("start").disabled = false;
+
     document.querySelector("#title small").textContent =
       `Couldn't start camera: ${error.message}`;
   }
 }
 
-
-
-
-/* ---------- MAIN HANDLING ---------- */
-
-
-
-
-function handle(rawLandmarks){
-  cctx.clearRect(0,0,W,H);
-  octx.clearRect(0,0,W,H);
-
-
-
-
-  if(rawLandmarks){
-    missedFrames = 0;
-  } else {
-    missedFrames++;
-  }
-
-
-
-
-  if(!rawLandmarks && missedFrames > MISS_GRACE){
-    smoothed = null;
-    pinching = false;
-    lastPoint = null;
-    cancelColorPreview();
-    colorState = "ready";
-    cooldownFrames = 0;
-
-
-
-
-    if(split){
-      setStatus("🫧 Hand swam away — show it again","🫧 Hand not found");
-    }
-  }
-
-
-
-
-  const lm = smoothLandmarks(rawLandmarks);
-
-
-
-
-  if(!split){
-    runPinchCheck(lm);
-    return;
-  }
-
-
-
-
-  if(!lm) return;
-
-
-
-
-  const thumb = lm[4];
-  const index = lm[8];
-
-
-
-
-  if(!fingersVisible(lm)){
-    pinching = false;
-    releaseFrames = 0;
-    lastPoint = null;
-
-
-
-
-    setStatus("🫧 Keep thumb + index in the pond","🫧 Hand near edge");
-    return;
-  }
-
-
-
-
-  const gap = pinchHalf(lm);
-
-
-
-
-  const inside = gap <= (
-    pinching ? PINCH_OFF : PINCH_ON
-  );
-
-
-
-
-  if(pinching && !inside){
-    releaseFrames++;
-  } else {
-    releaseFrames = 0;
-  }
-
-
-
-
-  pinching = inside || (
-    pinching && releaseFrames < RELEASE_FRAME_LIMIT
-  );
-
-
-
-
-  const targetX = Math.max(
-    0,
-    Math.min(W,(1 - ((thumb.x + index.x) / 2)) * W)
-  );
-
-
-
-
-  const targetY = Math.max(
-    0,
-    Math.min(H,((thumb.y + index.y) / 2) * H)
-  );
-
-
-
-
-  let changingColor = false;
-
-
-
-
-  if(!pinching){
-    changingColor = updateColors(lm);
-
-
-
-
-    /*
-      Keep the cursor stable before drawing starts.
-      This removes the large jump at the beginning of a stroke.
-    */
-    sx += (targetX - sx) * .5;
-    sy += (targetY - sy) * .5;
-    lastPoint = null;
-
-
-
-
-    if(!changingColor){
-      setStatus(`🫧 Draw a ${currentPrompt}!`,"🫧 Hand ready");
-    }
-  } else {
-    /*
-      Separate brush smoothing makes strokes much smoother than raw
-      MediaPipe landmark movement.
-    */
-    sx += (targetX - sx) * DRAW_SMOOTHING;
-    sy += (targetY - sy) * DRAW_SMOOTHING;
-
-
-
-
-    ink(sx,sy);
-
-
-
-
-    setStatus(
-      bubblePaint
-        ? `🫧 Drawing ${currentPrompt}!`
-        : `✨ Drawing ${currentPrompt}!`,
-      "✨ Painting"
-    );
-  }
-
-
-
-
-  drawCursor(sx,sy,pinching);
-  drawCameraMarkers(thumb,index,pinching);
-}
-
-
-
-
 function loop(){
   if(!cameraStarted || !handLandmarker) return;
 
-
-
-
   if(video.currentTime !== lastVideoTime){
     lastVideoTime = video.currentTime;
-
-
-
 
     const result = handLandmarker.detectForVideo(
       video,
       performance.now()
     );
 
+    const hands = result.landmarks || [];
 
-
-
-    handle(result.landmarks?.[0] || null);
+    if(mode === "duo"){
+      handleDuo(hands);
+    }else{
+      handleSolo(hands[0] || null);
+    }
   }
-
-
-
 
   requestAnimationFrame(loop);
 }
 
+/* ================= START / MODE ================= */
 
+$("start").onclick = () => {
+  $("mode-picker").classList.add("show");
+};
 
+$("solo-mode-button").onclick = () => {
+  mode = "solo";
+  $("mode-picker").classList.remove("show");
+  startApp();
+};
 
-$("start").onclick = startApp;
-
-
-
+$("duo-mode-button").onclick = () => {
+  mode = "duo";
+  $("mode-picker").classList.remove("show");
+  workspace.classList.add("duo-mode");
+  startApp();
+};
 
 window.addEventListener("beforeunload",() => {
   video.srcObject?.getTracks().forEach(track => track.stop());
@@ -1940,3 +1756,4 @@ window.addEventListener("beforeunload",() => {
 </script>
 </body>
 </html>
+```
