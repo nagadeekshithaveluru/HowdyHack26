@@ -4,6 +4,8 @@ Pinch Draw is a browser-based, hand-tracking drawing app built with Next.js and 
 
 The app code is driven by the single-page interface in `index.html`, while the Next.js app serves that page through `/pinch_draw.html` in `src/app/index.html/route.ts`.
 
+Run it on https://samarthxmathur.github.io/HowdyHack26.
+
 ## What the app does
 
 - Lets you draw in the air using pinch gestures with your thumb and index finger
