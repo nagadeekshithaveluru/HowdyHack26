@@ -293,9 +293,11 @@ button:disabled{opacity:.55;cursor:not-allowed}
   align-items:start;
 }
 #stage:not(.split){
+  --art-height:max(100vh,calc(100vw * 454 / 769));
+  --cam-width:min(590px,calc(100vw - 40px));
   display:flex;
   max-width:590px;
-  margin:38px auto 0;
+  margin:max(38px,calc(100vh - var(--art-height) * .437 - 88px - var(--cam-width) * .3125)) auto 0;
 }
 #stage:not(.split) #cam-pane{width:100%}
 #stage:not(.split) #canvas-pane{display:none}
