@@ -28,7 +28,7 @@ Once the canvas is open, make a hand sign and hold it for about half a second to
 | Green | G | Blue | B | Purple | P |
 | White | W | Gray | L | Black | K |
 
-Green/gray and blue/black would both use G and B, so gray uses **L** and black uses **K** (blac**K**). Change them in the `COLORS` list in `index.html`.
+Green/gray and blue/black would both use G and B, so gray uses **L** and black uses **K** (blac**K**). Change them in the `COLORS` list in `pinch_draw.html`.
 
 Sign notes: **R** is index and middle fingers crossed. **O** is all fingertips meeting the thumb. **G** is index and thumb pointing the same way, and **L** is index up with thumb out at a right angle. **K** is a V with the thumb touching the middle finger, pointing up, and **P** is the same shape pointing down. Keep your hand facing the camera. The diagrams in the toolbar are simplified drawings.
 
@@ -41,36 +41,22 @@ Sign notes: **R** is index and middle fingers crossed. **O** is all fingertips m
 
 ## Run it on your own computer
 
-The camera only works on `https://` or `localhost`, so don't just double-click the file.
+Install [Node.js](https://nodejs.org/), then run:
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/pinch-draw.git
-cd pinch-draw
-python3 -m http.server 8000
+npm install
+npm run dev
 ```
 
-Then open http://localhost:8000.
+Open http://localhost:3000. The camera works on `localhost` or an HTTPS deployment.
 
-## Publish your own copy on GitHub Pages
+## Deploy
 
-1. Create a new **public** repository named `pinch-draw` on github.com.
-2. Add `index.html` and `README.md`, either by dragging them onto the repo page ("Add file → Upload files") or from the command line:
-
-   ```bash
-   git init
-   git add index.html README.md
-   git commit -m "Pinch Draw"
-   git branch -M main
-   git remote add origin https://github.com/YOUR-USERNAME/pinch-draw.git
-   git push -u origin main
-   ```
-
-3. Go to **Settings → Pages**. Under "Build and deployment", set Source to **Deploy from a branch**, choose **main** and **/ (root)**, then **Save**.
-4. After about a minute your app is live at `https://samarthxmathur.github.io/HowdyHack26/`.
+Deploy this Next.js project to a Next.js host such as [Vercel](https://vercel.com/). Import the repository and use the default Next.js build settings.
 
 ## Settings you can tweak
 
-At the top of the tracking section in `index.html`:
+At the top of the tracking section in `pinch_draw.html`:
 
 | Setting | What it does |
 | --- | --- |
