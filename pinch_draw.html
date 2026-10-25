@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pinch Paint</title>
+<title>Pinch Draw</title>
 
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
@@ -829,7 +829,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
   <div class="brand">
     <div class="brand-bubble">🐟</div>
     <div>
-      <h1>Pinch Paint</h1>
+      <h1>Pinch Draw</h1>
       <p>Underwater Air Drawing</p>
     </div>
   </div>
@@ -1332,7 +1332,7 @@ $("save").onclick = () => {
   out.drawImage($("draw"),0,0);
 
   const link = document.createElement("a");
-  link.download = `pinch-paint-${currentPrompt.replaceAll(" ","-")}.png`;
+  link.download = `pinch-draw-${currentPrompt.replaceAll(" ","-")}.png`;
   link.href = output.toDataURL("image/png");
   link.click();
 };
