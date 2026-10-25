@@ -1,84 +1,63 @@
 # Pinch Draw
 
-Draw in the air. Pinch your thumb and index finger together in front of your webcam to draw on a canvas, and let go to stop.
+Pinch Draw is a browser-based, hand-tracking drawing app built with Next.js and MediaPipe. It uses the webcam to detect fingertip pinch gestures and turns them into drawing input, with a playful underwater theme and gamified sketch prompts.
 
-Everything runs in your browser. Your video never leaves your computer.
+The app code is driven by the single-page interface in `index.html`, while the Next.js app serves that page through `/pinch_draw.html` in `src/app/index.html/route.ts`.
 
-**Try it:** https://samarthxmathur.github.io/HowdyHack26/
+## What the app does
+
+- Lets you draw in the air using pinch gestures with your thumb and index finger
+- Starts in a title screen and mode picker
+- Includes a Solo Quick Draw mode for sketching by yourself
+- Includes a Double Drawdown mode where two players draw the same prompt and vote on the winner
+- Uses MediaPipe Hand Landmarker to track hand position and gesture state
+- Lets you switch colors via hand signs and lock the selected color
+- Supports brush-size changes, bubble-paint effects, clearing the canvas, and saving drawings as PNG files
 
 ## How to use
 
-1. Open the link above and click **Start**.
-2. When your browser asks to use your camera, click **Allow**.
-3. Hold your hand up so your thumb and index fingertips are visible in the camera view. A badge and frame at the top of the camera view show the pinch detector:
-   - **Red:** no pinch (or a finger is out of frame).
-   - **Green:** thumb and index fingertips are touching.
-4. Pinch and hold green for about a third of a second. The screen splits into your camera (left) and a blank canvas (right).
-5. Pinch to draw. The ring on the camera view marks the pinch point, and your drawing follows it on the canvas. Open your fingers to lift the pen.
+1. Open the app in a browser.
+2. Click Start, then choose a mode.
+3. Allow webcam access when prompted.
+4. Position your hand in front of the camera so the thumb and index fingertips are visible.
+5. Pinch with your thumb and index finger to begin drawing.
+6. Release the pinch to stop drawing.
+7. Use the on-screen toolbar or hand-sign gestures to choose a color, adjust brush size, clear the page, or save the canvas.
 
-Toolbar: pick a color, change the brush size, hide or show the camera, clear the canvas, or save your drawing as a PNG.
+## Hand-sign color controls
 
-## Change color with hand signs
+Once the canvas is active, the app looks for simple gestures to switch colors. The exact gesture mapping is defined in the front-end logic in `index.html` and is designed to match the visual color cues in the UI.
 
-Once the canvas is open, make a hand sign and hold it for about half a second to switch colors. The matching color highlights in the toolbar, and the the camera caption tells you that that color is ready. **To be able to draw with the matching color, show a thumbs up to the camera to lock in the color.**
+## Run locally
 
-| Color | Sign |
-| --- | --- |
-| Red (Coral) | Index finger raised |
-| Orange | Peace sign |
-| Yellow (Sunshine) | 3 fingers up |
-| Green (Seaweed) | 4 fingers up |
-| Blue (Ocean) | Fingers crossed |
-| Black | Closed fist |
-
-### Tips
-
-- Use a well-lit room with your hand facing the camera.
-- Keep both fingertips (thumb and index) inside the camera frame, or drawing stops. The rest of your hand can leave the frame.
-- Both fingertips must be inside the ring for it to count as a pinch.
-- Works best in desktop Chrome, Edge, or Safari with a webcam.
-
-## Run it on your own computer
-
-Install [Node.js](https://nodejs.org/), then run:
+Install dependencies and start the app:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open http://localhost:3000. The camera works on `localhost` or an HTTPS deployment.
+Then open:
 
-## Deploy
+```text
+http://localhost:3000
+```
 
-Deploy this Next.js project to a Next.js host such as [Vercel](https://vercel.com/). Import the repository and use the default Next.js build settings.
+This project expects webcam access, so it works best on `localhost` or on an HTTPS deployment.
 
-## Settings you can tweak
+## Project structure
 
-At the top of the tracking section in `pinch_draw.html`:
+- `index.html` — main UI, drawing logic, hand-tracking integration, and game flow
+- `src/app/page.tsx` — redirects the homepage to the drawing page
+- `src/app/index.html/route.ts` — serves the browser app HTML from the project root
+- `next.config.ts` — Next.js config for the page route
 
-| Setting | What it does |
-| --- | --- |
-| `PINCH_R` | Size of the ring. Larger is easier to pinch, smaller is stricter. |
-| `PINCH_R_OFF` | How far apart your fingers can drift before the pen lifts. |
-| `MARGIN` | How far inside the camera edge your fingertips must stay. |
-| `SETTLE_FRAMES` | Frames to wait after a pinch starts before drawing. |
-| `HOLD_FRAMES` | How long to hold a pinch to open the canvas. |
+## Browser requirements
 
-## Troubleshooting
+- Webcam-enabled browser
+- Desktop Chrome, Edge, or Safari are the best fit
+- Works best with good lighting and a visible hand in frame
 
-- **No camera prompt:** use https or localhost, and check the site's camera permission in your browser.
-- **Stays red:** bring your hand toward the middle of the frame, show both fingertips, and touch the fingertips together.
-- **Won't draw:** fingers must be fully in frame and both fingertips inside the ring. Try raising `PINCH_R`.
-- **Circle twitches in bright light:** avoid direct light or sun on your hand or behind you, face a soft light source, and keep the hand a bit away from the lens. You can also lower `SMOOTH` or raise `RELEASE_FRAMES` in `index.html` for a steadier pen.
-- **Corners are hard to reach:** the hand model needs to see most of your hand. If your palm is out of frame, tracking can drop. Keep more of your hand in view when drawing in a corner, or sit a little further from the camera.
-- **Slow to start:** the hand-tracking model downloads the first time. Later visits are faster.
-- **Slow or choppy:** close other tabs, or change `delegate: "GPU"` to `"CPU"`.
+## Notes
 
-## Credits
-
-Hand tracking by [MediaPipe Hand Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker).
-
-## License
-
-MIT
+This is a browser-only prototype: the camera feed is handled locally in the browser, and the app does not send the webcam stream to a backend service.
