@@ -25,7 +25,7 @@ Once the canvas is open, make a hand sign and hold it for about half a second to
 | Color | Sign |
 | --- | --- |
 | Red (Coral) | Index finger raised |
-| Green (Seaweed) | Peace sign |
+| Orange | Peace sign |
 | Yellow (Sunshine) | 3 fingers up |
 | Green (Seaweed) | 4 fingers up |
 | Blue (Ocean) | Fingers crossed |
