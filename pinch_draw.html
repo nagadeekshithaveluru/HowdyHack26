@@ -1064,7 +1064,10 @@ let showVideo = true;
 let currentPrompt = "";
 let promptTimer = null;
 
+/* Needed for smooth Solo pinch and color tracking */
+let smoothed = null;
 let soloHandCenter = null;
+
 let missedFrames = 0;
 let previewPinching = false;
 let previewFrames = 0;
@@ -2124,7 +2127,7 @@ function loop(){
     if(mode === "duo"){
       handleDuo(hands);
     }else{
-      handleSolo(hands[0] || null);
+      handleSolo(getStableSoloHand(hands));
     }
   }
 
