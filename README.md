@@ -18,19 +18,18 @@ Everything runs in your browser. Your video never leaves your computer.
 
 Toolbar: pick a color, change the brush size, hide or show the camera, clear the canvas, or save your drawing as a PNG.
 
-## Change color with sign language
+## Change color with hand signs
 
-Once the canvas is open, make a hand sign and hold it for about half a second to switch colors. The matching color and its sign diagram highlight in the toolbar, and the cursor ring changes color. You can also click a color. Making a sign never draws.
+Once the canvas is open, make a hand sign and hold it for about half a second to switch colors. The matching color highlights in the toolbar, and the the camera caption tells you that that color is ready. **To be able to draw with the matching color, show a thumbs up to the camera to lock in the color.**
 
-| Color | Sign | Color | Sign | Color | Sign |
-| --- | --- | --- | --- | --- | --- |
-| Red | R | Orange | O | Yellow | Y |
-| Green | G | Blue | B | Purple | P |
-| White | W | Gray | L | Black | K |
-
-Green/gray and blue/black would both use G and B, so gray uses **L** and black uses **K** (blac**K**). Change them in the `COLORS` list in `pinch_draw.html`.
-
-Sign notes: **R** is index and middle fingers crossed. **O** is all fingertips meeting the thumb. **G** is index and thumb pointing the same way, and **L** is index up with thumb out at a right angle. **K** is a V with the thumb touching the middle finger, pointing up, and **P** is the same shape pointing down. Keep your hand facing the camera. The diagrams in the toolbar are simplified drawings.
+| Color | Sign |
+| --- | --- |
+| Red (Coral) | Index finger raised |
+| Green (Seaweed) | Peace sign |
+| Yellow (Sunshine) | 3 fingers up |
+| Green (Seaweed) | 4 fingers up |
+| Blue (Ocean) | Fingers crossed |
+| Black | Closed fist |
 
 ### Tips
 
