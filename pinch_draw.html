@@ -1,6 +1,3 @@
-<<<<<<< Updated upstream
-// howdy hack 2026
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,8 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pinch Paint</title>
 
+
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
+
 
 <style>
 :root{
@@ -65,6 +64,7 @@ button,input{font:inherit}
 button{cursor:pointer}
 button:disabled{opacity:.55;cursor:not-allowed}
 .hidden{display:none!important}
+
 
 /* TITLE */
 #title{
@@ -140,6 +140,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
   font-weight:700;
   text-align:center;
 }
+
 
 /* APP */
 .app-header{
@@ -222,6 +223,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
   to{transform:translateY(-115vh) translateX(32px) scale(1.2);opacity:0}
 }
 
+
 /* PROMPT */
 #prompt-overlay{
   position:fixed;
@@ -280,6 +282,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
   font-size:clamp(27px,5vw,46px);
   line-height:1.1;
 }
+
 
 /* STAGE */
 #stage{
@@ -424,6 +427,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 #pinch-check-card b{display:block;color:var(--gold);font-size:14px}
 #pinch-check-card span{color:#c3f3ea;font-size:12px;font-weight:700}
 
+
 /* CONTROLS */
 .draw-only{display:none}
 .drawing-mode .draw-only{display:flex}
@@ -505,6 +509,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 </style>
 </head>
 
+
 <body>
 <div id="title">
   <div id="title-art" role="img" aria-label="Underwater scene with a Start button">
@@ -514,6 +519,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
     <small></small>
   </div>
 </div>
+
 
 <header class="app-header">
   <div class="brand">
@@ -526,12 +532,14 @@ button:disabled{opacity:.55;cursor:not-allowed}
   <div id="top-status">🫧 Start your adventure</div>
 </header>
 
+
 <main class="workspace" id="workspace">
   <div class="bubble-field" aria-hidden="true">
     <span class="bubble"></span><span class="bubble"></span><span class="bubble"></span>
     <span class="bubble"></span><span class="bubble"></span><span class="bubble"></span>
     <span class="bubble"></span>
   </div>
+
 
   <div id="prompt-overlay" aria-live="polite">
     <div id="falling-prompt">
@@ -542,6 +550,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
       </div>
     </div>
   </div>
+
 
   <section id="stage">
     <div class="pane" id="cam-pane">
@@ -554,6 +563,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
       </div>
     </div>
 
+
     <div class="pane" id="canvas-pane">
       <canvas id="draw" width="1280" height="720"></canvas>
       <canvas id="cursor" width="1280" height="720"></canvas>
@@ -561,25 +571,30 @@ button:disabled{opacity:.55;cursor:not-allowed}
     </div>
   </section>
 
+
   <section id="pinch-check-card">
     <div class="fish-row">🐟 🫧 🐠</div>
     <b>Pinch Check</b>
     <span>Touch thumb and index together. Hold the green sparkle to open your sketchbook.</span>
   </section>
 
+
   <section class="controls-card draw-only">
     <div id="swatches" class="draw-only"></div>
+
 
     <label class="size-control draw-only">
       🖌️ Size
       <input id="size" type="range" min="2" max="30" value="8">
     </label>
 
+
     <button class="tool active draw-only" id="bubble-toggle">🫧 Bubble paint</button>
     <button class="tool draw-only" id="video-toggle">👁 Hide camera</button>
     <button class="tool draw-only" id="clear">🫧 Clear</button>
     <button class="tool draw-only" id="save">⬇ Save PNG</button>
   </section>
+
 
   <div class="draw-only block" id="color-help">
     <b>Hands-free colors:</b>
@@ -588,8 +603,10 @@ button:disabled{opacity:.55;cursor:not-allowed}
     Hold the pose until its bubble glows, then give a <b>👍 thumbs-up</b> to lock it.
   </div>
 
+
   <p class="tip" id="tip">🫧 Complete the pinch check above first.</p>
 </main>
+
 
 <script type="module">
 import {
@@ -597,15 +614,18 @@ import {
   FilesetResolver
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
 
+
 const W = 1280;
 const H = 720;
 const $ = id => document.getElementById(id);
+
 
 const PROMPTS = [
   "fish","jellyfish","shark","octopus","sea turtle",
   "starfish","crab","seahorse","whale","treasure chest",
   "anchor","pirate ship","mermaid","coral reef","seashell"
 ];
+
 
 const COLORS = [
   { name:"Black",    hex:"#111111", key:"ink" },
@@ -616,13 +636,16 @@ const COLORS = [
   { name:"Ocean",    hex:"#2d86e8", key:"blue" }
 ];
 
+
 const video = $("cam");
 const stage = $("stage");
 const workspace = $("workspace");
 
+
 const dctx = $("draw").getContext("2d");
 const cctx = $("cursor").getContext("2d");
 const octx = $("cam-overlay").getContext("2d");
+
 
 let color = COLORS[0].hex;
 let size = 8;
@@ -631,10 +654,12 @@ let showVideo = true;
 let currentPrompt = "";
 let promptTimer = null;
 
+
 let handLandmarker = null;
 let cameraStarted = false;
 let lastVideoTime = -1;
 let split = false;
+
 
 let smoothed = null;
 let missedFrames = 0;
@@ -644,9 +669,11 @@ let pinching = false;
 let releaseFrames = 0;
 let lastPoint = null;
 
+
 let sx = W / 2;
 let sy = H / 2;
 let bubbleCounter = 0;
+
 
 /* Gesture/color state */
 let colorState = "ready";
@@ -655,6 +682,7 @@ let gestureFrames = 0;
 let pendingColor = null;
 let thumbsFrames = 0;
 let cooldownFrames = 0;
+
 
 const PINCH_ON = 22;
 const PINCH_OFF = 34;
@@ -667,12 +695,15 @@ const COLOR_HOLD_FRAMES = 12;
 const THUMBS_HOLD_FRAMES = 8;
 const LOCK_COOLDOWN_FRAMES = 30;
 
+
 const swatchButtons = {};
+
 
 function setStatus(cameraMessage, headerMessage){
   $("status").textContent = cameraMessage;
   $("top-status").textContent = headerMessage;
 }
+
 
 function selectPrompt(){
   let next = PROMPTS[Math.floor(Math.random() * PROMPTS.length)];
@@ -683,13 +714,16 @@ function selectPrompt(){
   $("prompt-text").textContent = currentPrompt;
 }
 
+
 function dropPrompt(){
   selectPrompt();
+
 
   const overlay = $("prompt-overlay");
   overlay.classList.remove("show");
   void overlay.offsetWidth;
   overlay.classList.add("show");
+
 
   clearTimeout(promptTimer);
   promptTimer = setTimeout(() => {
@@ -698,13 +732,16 @@ function dropPrompt(){
   }, 2500);
 }
 
+
 function selectColor(item){
   if (!item) return;
+
 
   color = item.hex;
   Object.values(swatchButtons).forEach(button => button.classList.remove("on"));
   swatchButtons[item.key]?.classList.add("on");
 }
+
 
 COLORS.forEach((item,index) => {
   const button = document.createElement("button");
@@ -713,6 +750,7 @@ COLORS.forEach((item,index) => {
   button.title = item.name;
   button.setAttribute("aria-label", `${item.name} paint`);
 
+
   button.onclick = () => {
     selectColor(item);
     cancelColorPreview();
@@ -720,13 +758,16 @@ COLORS.forEach((item,index) => {
     setStatus(`🎨 ${item.name} selected`, `🎨 ${item.name} paint`);
   };
 
+
   $("swatches").appendChild(button);
   swatchButtons[item.key] = button;
 });
 
+
 $("size").oninput = event => {
   size = Number(event.target.value);
 };
+
 
 $("bubble-toggle").onclick = event => {
   bubblePaint = !bubblePaint;
@@ -736,6 +777,7 @@ $("bubble-toggle").onclick = event => {
     : "✏️ Smooth paint";
 };
 
+
 $("video-toggle").onclick = event => {
   showVideo = !showVideo;
   video.style.opacity = showVideo ? "1" : "0";
@@ -744,20 +786,24 @@ $("video-toggle").onclick = event => {
     : "👁 Show camera";
 };
 
+
 $("clear").onclick = () => {
   dctx.clearRect(0,0,W,H);
   lastPoint = null;
 };
+
 
 $("save").onclick = () => {
   const output = document.createElement("canvas");
   output.width = W;
   output.height = H;
 
+
   const out = output.getContext("2d");
   out.fillStyle = "#fffdf8";
   out.fillRect(0,0,W,H);
   out.drawImage($("draw"),0,0);
+
 
   const link = document.createElement("a");
   link.download = `pinch-paint-${currentPrompt.replaceAll(" ","-")}.png`;
@@ -765,10 +811,12 @@ $("save").onclick = () => {
   link.click();
 };
 
+
 function hexToRgba(hex,alpha){
   const value = hex.slice(1);
   return `rgba(${parseInt(value.slice(0,2),16)},${parseInt(value.slice(2,4),16)},${parseInt(value.slice(4,6),16)},${alpha})`;
 }
+
 
 function ring(ctx,x,y,radius,stroke,fill=null){
   ctx.lineWidth = 3;
@@ -776,6 +824,7 @@ function ring(ctx,x,y,radius,stroke,fill=null){
   ctx.beginPath();
   ctx.arc(x,y,radius,0,Math.PI * 2);
   ctx.stroke();
+
 
   if(fill){
     ctx.fillStyle = fill;
@@ -785,12 +834,14 @@ function ring(ctx,x,y,radius,stroke,fill=null){
   }
 }
 
+
 function pinchHalf(lm){
   return Math.hypot(
     (lm[4].x - lm[8].x) * W,
     (lm[4].y - lm[8].y) * H
   ) / 2;
 }
+
 
 function fingersVisible(lm){
   const margin = -0.05;
@@ -801,9 +852,11 @@ function fingersVisible(lm){
   });
 }
 
+
 /* Smooth every landmark to reduce tracker jitter. */
 function smoothLandmarks(lm){
   if(!lm) return null;
+
 
   if(!smoothed){
     smoothed = lm.map(point => ({
@@ -819,13 +872,16 @@ function smoothLandmarks(lm){
     });
   }
 
+
   return smoothed;
 }
+
 
 function drawCameraMarkers(thumb,index,active){
   const a = { x:(1 - thumb.x) * W, y:thumb.y * H };
   const b = { x:(1 - index.x) * W, y:index.y * H };
   const markerColor = active ? "#75f1c5" : "#ffd166";
+
 
   octx.strokeStyle = active ? "#75f1c5" : "rgba(255,255,255,.85)";
   octx.lineWidth = 3;
@@ -833,6 +889,7 @@ function drawCameraMarkers(thumb,index,active){
   octx.moveTo(a.x,a.y);
   octx.lineTo(b.x,b.y);
   octx.stroke();
+
 
   for(const point of [a,b]){
     octx.fillStyle = markerColor;
@@ -842,8 +899,10 @@ function drawCameraMarkers(thumb,index,active){
   }
 }
 
+
 function drawCursor(x,y,drawing){
   const radius = Math.max(size,8) + 6;
+
 
   ring(cctx,x,y,radius + 2,"rgba(0,0,0,.2)");
   ring(
@@ -856,20 +915,24 @@ function drawCursor(x,y,drawing){
   );
 }
 
+
 function bubbleStamp(x,y){
   const radius = Math.max(3,size * .42);
   const offsetX = (Math.random() - .5) * size * 1.4;
   const offsetY = (Math.random() - .5) * size * 1.4;
+
 
   dctx.save();
   dctx.lineWidth = Math.max(1,size * .12);
   dctx.strokeStyle = hexToRgba(color,.55);
   dctx.fillStyle = hexToRgba(color,.16);
 
+
   dctx.beginPath();
   dctx.arc(x + offsetX,y + offsetY,radius,0,Math.PI * 2);
   dctx.fill();
   dctx.stroke();
+
 
   dctx.fillStyle = "rgba(255,255,255,.65)";
   dctx.beginPath();
@@ -884,6 +947,7 @@ function bubbleStamp(x,y){
   dctx.restore();
 }
 
+
 function ink(x,y){
   if(!lastPoint){
     dctx.fillStyle = color;
@@ -891,15 +955,19 @@ function ink(x,y){
     dctx.arc(x,y,size / 2,0,Math.PI * 2);
     dctx.fill();
 
+
     if(bubblePaint) bubbleStamp(x,y);
+
 
     lastPoint = {x,y};
     bubbleCounter = 0;
     return;
   }
 
+
   const movement = Math.hypot(x - lastPoint.x,y - lastPoint.y);
   if(movement < .7) return;
+
 
   dctx.strokeStyle = color;
   dctx.lineWidth = size;
@@ -910,21 +978,27 @@ function ink(x,y){
   dctx.lineTo(x,y);
   dctx.stroke();
 
+
   bubbleCounter++;
   if(bubblePaint && bubbleCounter % 3 === 0) bubbleStamp(x,y);
+
 
   lastPoint = {x,y};
 }
 
+
 /* ---------- COLOR GESTURES ---------- */
+
 
 function dist(a,b){
   return Math.hypot(a.x - b.x,a.y - b.y);
 }
 
+
 function palmSize(lm){
   return Math.max(dist(lm[0],lm[9]),dist(lm[5],lm[17]),.08);
 }
+
 
 /*
   This compares tip and PIP positions with a scale-aware threshold.
@@ -935,13 +1009,16 @@ function fingerUp(lm,tip,pip){
   return lm[tip].y < lm[pip].y - scale * .13;
 }
 
+
 function fingerFolded(lm,tip,pip){
   const scale = palmSize(lm);
   return lm[tip].y > lm[pip].y - scale * .025;
 }
 
+
 function isThumbsUp(lm){
   const scale = palmSize(lm);
+
 
   return (
     lm[4].y < lm[3].y - scale * .28 &&
@@ -953,9 +1030,11 @@ function isThumbsUp(lm){
   );
 }
 
+
 function crossedIndexMiddle(lm){
   const indexUp = fingerUp(lm,8,6);
   const middleUp = fingerUp(lm,12,10);
+
 
   if(
     !indexUp ||
@@ -966,8 +1045,10 @@ function crossedIndexMiddle(lm){
     return false;
   }
 
+
   const width = Math.max(dist(lm[5],lm[17]),.01);
   const tipsClose = dist(lm[8],lm[12]) < width * .62;
+
 
   /*
     Works for either left or right hands:
@@ -980,8 +1061,10 @@ function crossedIndexMiddle(lm){
                        tipDirection !== 0 &&
                        knuckleDirection !== tipDirection;
 
+
   return swappedSides || tipsClose;
 }
+
 
 function getColorGestureNumber(lm){
   const indexUp = fingerUp(lm,8,6);
@@ -989,11 +1072,13 @@ function getColorGestureNumber(lm){
   const ringUp = fingerUp(lm,16,14);
   const pinkyUp = fingerUp(lm,20,18);
 
+
   const raised =
     Number(indexUp) +
     Number(middleUp) +
     Number(ringUp) +
     Number(pinkyUp);
+
 
   const fist =
     fingerFolded(lm,8,6) &&
@@ -1002,6 +1087,7 @@ function getColorGestureNumber(lm){
     fingerFolded(lm,20,18) &&
     !isThumbsUp(lm);
 
+
   if(fist) return 0;
   if(crossedIndexMiddle(lm)) return 5;
   if(raised === 4) return 4;
@@ -1009,8 +1095,10 @@ function getColorGestureNumber(lm){
   if(raised === 2) return 2;
   if(raised === 1) return 1;
 
+
   return null;
 }
+
 
 function colorForNumber(number){
   const map = {
@@ -1022,14 +1110,17 @@ function colorForNumber(number){
     5:"blue"
   };
 
+
   return COLORS.find(item => item.key === map[number]) || null;
 }
+
 
 function clearPreviewGlow(){
   Object.values(swatchButtons).forEach(button => {
     button.classList.remove("preview");
   });
 }
+
 
 function cancelColorPreview(){
   pendingColor = null;
@@ -1038,24 +1129,29 @@ function cancelColorPreview(){
   thumbsFrames = 0;
   clearPreviewGlow();
 
+
   if(colorState === "preview"){
     colorState = "ready";
   }
 }
+
 
 function beginPreview(item){
   pendingColor = item;
   colorState = "preview";
   thumbsFrames = 0;
 
+
   clearPreviewGlow();
   swatchButtons[item.key]?.classList.add("preview");
+
 
   setStatus(
     `🎨 ${item.name} ready — give 👍 to lock it!`,
     `👍 Lock ${item.name}`
   );
 }
+
 
 /*
   Returns true whenever the hand is being used for color selection,
@@ -1065,19 +1161,24 @@ function updateColors(lm){
   if(colorState === "locked"){
     cooldownFrames--;
 
+
     if(cooldownFrames <= 0 && !isThumbsUp(lm)){
       colorState = "ready";
     }
 
+
     return true;
   }
+
 
   if(colorState === "preview"){
     if(isThumbsUp(lm)){
       thumbsFrames++;
 
+
       if(thumbsFrames >= THUMBS_HOLD_FRAMES){
         const selected = pendingColor;
+
 
         selectColor(selected);
         pendingColor = null;
@@ -1085,10 +1186,13 @@ function updateColors(lm){
         gestureFrames = 0;
         gestureNumber = null;
 
+
         clearPreviewGlow();
+
 
         colorState = "locked";
         cooldownFrames = LOCK_COOLDOWN_FRAMES;
+
 
         setStatus(
           `✨ ${selected.name} locked!`,
@@ -1099,19 +1203,24 @@ function updateColors(lm){
       thumbsFrames = 0;
     }
 
+
     return true;
   }
 
+
   if(isThumbsUp(lm)) return true;
+
 
   const number = getColorGestureNumber(lm);
   const item = colorForNumber(number);
+
 
   if(!item){
     gestureNumber = null;
     gestureFrames = 0;
     return false;
   }
+
 
   if(number === gestureNumber){
     gestureFrames++;
@@ -1120,31 +1229,41 @@ function updateColors(lm){
     gestureFrames = 1;
   }
 
+
   if(gestureFrames >= COLOR_HOLD_FRAMES){
     beginPreview(item);
   }
 
+
   return true;
 }
 
+
 /* ---------- PINCH CHECK ---------- */
+
 
 function runPinchCheck(lm){
   let isPinched = false;
 
+
   if(lm && fingersVisible(lm)){
     const gap = pinchHalf(lm);
+
 
     previewPinching = gap <= (
       previewPinching ? PINCH_OFF : PINCH_ON
     );
 
+
     isPinched = previewPinching;
+
 
     const thumb = lm[4];
     const index = lm[8];
 
+
     drawCameraMarkers(thumb,index,isPinched);
+
 
     ring(
       octx,
@@ -1157,44 +1276,56 @@ function runPinchCheck(lm){
     previewPinching = false;
   }
 
+
   $("detector").classList.toggle("ok",isPinched);
   $("cam-pane").classList.toggle("ok",isPinched);
+
 
   setStatus(
     isPinched ? "✨ Pinch spotted — hold it!" : "🫧 Touch thumb + index together",
     isPinched ? "✨ Pinch found!" : "🫧 Pinch check"
   );
 
+
   previewFrames = isPinched ? previewFrames + 1 : 0;
+
 
   if(previewFrames >= OPEN_BOARD_FRAMES){
     split = true;
     stage.classList.add("split");
     workspace.classList.add("drawing-mode");
 
+
     $("pinch-check-card").classList.add("hidden");
+
 
     pinching = false;
     lastPoint = null;
     previewFrames = 0;
 
+
     dropPrompt();
+
 
     $("tip").textContent =
       "🫧 Watch the prompt drop, then pinch to begin drawing!";
   }
 }
 
+
 /* ---------- CAMERA / TRACKER ---------- */
+
 
 async function setupCamera(track){
   try{
     const caps = track.getCapabilities?.() || {};
     const advanced = {};
 
+
     if(caps.exposureMode?.includes("continuous")) advanced.exposureMode = "continuous";
     if(caps.focusMode?.includes("continuous")) advanced.focusMode = "continuous";
     if(caps.whiteBalanceMode?.includes("continuous")) advanced.whiteBalanceMode = "continuous";
+
 
     if(Object.keys(advanced).length){
       await track.applyConstraints({advanced:[advanced]});
@@ -1202,10 +1333,12 @@ async function setupCamera(track){
   }catch{}
 }
 
+
 async function loadTracker(){
   const vision = await FilesetResolver.forVisionTasks(
     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
   );
+
 
   return HandLandmarker.createFromOptions(vision,{
     baseOptions:{
@@ -1220,9 +1353,11 @@ async function loadTracker(){
   });
 }
 
+
 async function startApp(){
   $("start").disabled = true;
   setStatus("Requesting camera…","🫧 Waking the fish…");
+
 
   try{
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -1235,23 +1370,31 @@ async function startApp(){
       audio:false
     });
 
+
     await setupCamera(stream.getVideoTracks()[0]);
+
 
     video.srcObject = stream;
     await video.play();
 
+
     $("title").classList.add("gone");
 
+
     setStatus("Loading hand tracker…","🫧 Looking for your hand…");
+
 
     handLandmarker = await loadTracker();
     cameraStarted = true;
 
+
     setStatus("Touch thumb + index together","🫧 Pinch check");
+
 
     requestAnimationFrame(loop);
   }catch(error){
     console.error(error);
+
 
     $("start").disabled = false;
     document.querySelector("#title small").textContent =
@@ -1259,17 +1402,21 @@ async function startApp(){
   }
 }
 
+
 /* ---------- MAIN HANDLING ---------- */
+
 
 function handle(rawLandmarks){
   cctx.clearRect(0,0,W,H);
   octx.clearRect(0,0,W,H);
+
 
   if(rawLandmarks){
     missedFrames = 0;
   } else {
     missedFrames++;
   }
+
 
   if(!rawLandmarks && missedFrames > MISS_GRACE){
     smoothed = null;
@@ -1279,37 +1426,47 @@ function handle(rawLandmarks){
     colorState = "ready";
     cooldownFrames = 0;
 
+
     if(split){
       setStatus("🫧 Hand swam away — show it again","🫧 Hand not found");
     }
   }
 
+
   const lm = smoothLandmarks(rawLandmarks);
+
 
   if(!split){
     runPinchCheck(lm);
     return;
   }
 
+
   if(!lm) return;
+
 
   const thumb = lm[4];
   const index = lm[8];
+
 
   if(!fingersVisible(lm)){
     pinching = false;
     releaseFrames = 0;
     lastPoint = null;
 
+
     setStatus("🫧 Keep thumb + index in the pond","🫧 Hand near edge");
     return;
   }
 
+
   const gap = pinchHalf(lm);
+
 
   const inside = gap <= (
     pinching ? PINCH_OFF : PINCH_ON
   );
+
 
   if(pinching && !inside){
     releaseFrames++;
@@ -1317,24 +1474,30 @@ function handle(rawLandmarks){
     releaseFrames = 0;
   }
 
+
   pinching = inside || (
     pinching && releaseFrames < RELEASE_FRAME_LIMIT
   );
+
 
   const targetX = Math.max(
     0,
     Math.min(W,(1 - ((thumb.x + index.x) / 2)) * W)
   );
 
+
   const targetY = Math.max(
     0,
     Math.min(H,((thumb.y + index.y) / 2) * H)
   );
 
+
   let changingColor = false;
+
 
   if(!pinching){
     changingColor = updateColors(lm);
+
 
     /*
       Keep the cursor stable before drawing starts.
@@ -1343,6 +1506,7 @@ function handle(rawLandmarks){
     sx += (targetX - sx) * .5;
     sy += (targetY - sy) * .5;
     lastPoint = null;
+
 
     if(!changingColor){
       setStatus(`🫧 Draw a ${currentPrompt}!`,"🫧 Hand ready");
@@ -1355,7 +1519,9 @@ function handle(rawLandmarks){
     sx += (targetX - sx) * DRAW_SMOOTHING;
     sy += (targetY - sy) * DRAW_SMOOTHING;
 
+
     ink(sx,sy);
+
 
     setStatus(
       bubblePaint
@@ -1365,28 +1531,36 @@ function handle(rawLandmarks){
     );
   }
 
+
   drawCursor(sx,sy,pinching);
   drawCameraMarkers(thumb,index,pinching);
 }
 
+
 function loop(){
   if(!cameraStarted || !handLandmarker) return;
 
+
   if(video.currentTime !== lastVideoTime){
     lastVideoTime = video.currentTime;
+
 
     const result = handLandmarker.detectForVideo(
       video,
       performance.now()
     );
 
+
     handle(result.landmarks?.[0] || null);
   }
+
 
   requestAnimationFrame(loop);
 }
 
+
 $("start").onclick = startApp;
+
 
 window.addEventListener("beforeunload",() => {
   video.srcObject?.getTracks().forEach(track => track.stop());
@@ -1394,5 +1568,6 @@ window.addEventListener("beforeunload",() => {
 </script>
 </body>
 </html>
-=======
->>>>>>> Stashed changes
+
+
+
