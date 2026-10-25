@@ -66,7 +66,7 @@ Then open http://localhost:8000.
    ```
 
 3. Go to **Settings → Pages**. Under "Build and deployment", set Source to **Deploy from a branch**, choose **main** and **/ (root)**, then **Save**.
-4. After about a minute your app is live at `https://YOUR-USERNAME.github.io/pinch-draw/`.
+4. After about a minute your app is live at `https://samarthxmathur.github.io/HowdyHack26/`.
 
 ## Settings you can tweak
 
