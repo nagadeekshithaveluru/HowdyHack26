@@ -35,6 +35,28 @@ body{
   flex-direction:column;
   align-items:center;
   overflow-x:hidden;
+  background:none;
+}
+body::before,body::after{
+  content:"";
+  position:fixed;
+  left:50%;
+  bottom:0;
+  z-index:-2;
+  width:max(100vw,calc(100vh * 769 / 454));
+  height:max(100vh,calc(100vw * 454 / 769));
+  transform:translateX(-50%);
+  pointer-events:none;
+}
+body::before{
+  background:linear-gradient(180deg,#3eaaae 0%,#2b8a93 25%,#17606c 50%,#0e3f4c 75%,#0a2c3b 100%);
+}
+body::after{
+  background:url("https://api.builder.io/api/v1/image/assets/TEMP/cf85875c9cd69e8098f17e0ff35bde0ce8a1e7e5?width=1538") center bottom/100% 100% no-repeat;
+  -webkit-mask:linear-gradient(#000 0 0),linear-gradient(#000 0 0) 52.2% 72.5%/68.2% 72% no-repeat;
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0),linear-gradient(#000 0 0) 52.2% 72.5%/68.2% 72% no-repeat;
+  mask-composite:exclude;
 }
 button,input{font:inherit}
 button{cursor:pointer}
@@ -55,13 +77,43 @@ button:disabled{opacity:.55;cursor:not-allowed}
 }
 #title.gone{opacity:0;pointer-events:none}
 #title-art{
+  --title-image:url("https://api.builder.io/api/v1/image/assets/TEMP/3395c80f62728047cfac48044910f6c8cf10edce?width=3748");
   position:absolute;
   left:50%;
   top:50%;
   width:min(100vw,calc(100vh * 1568 / 1227));
   height:min(100vh,calc(100vw * 1227 / 1568));
   transform:translate(-50%,-50%);
-  background:url("title-screen.png") center/100% 100% no-repeat;
+  background:var(--title-image) center/100% 100% no-repeat;
+}
+.seaweed-sway{
+  position:absolute;
+  inset:0;
+  background:var(--title-image) center/100% 100% no-repeat;
+  transform-origin:50% 100%;
+  pointer-events:none;
+  -webkit-mask-image:linear-gradient(0deg,#000 55%,transparent);
+  mask-image:linear-gradient(0deg,#000 55%,transparent);
+  will-change:transform;
+}
+.seaweed-left{
+  clip-path:polygon(0 28%,20% 28%,20% 70%,27% 85%,27% 100%,0 100%);
+  animation:seaweedSwayLeft 5s ease-in-out infinite alternate;
+}
+.seaweed-right{
+  clip-path:polygon(78% 8%,100% 8%,100% 100%,82% 100%,82% 58%,78% 58%);
+  animation:seaweedSwayRight 6s ease-in-out -2s infinite alternate;
+}
+@keyframes seaweedSwayLeft{
+  from{transform:skewX(-.9deg) translateX(-2px)}
+  to{transform:skewX(.9deg) translateX(2px)}
+}
+@keyframes seaweedSwayRight{
+  from{transform:skewX(.8deg) translateX(2px)}
+  to{transform:skewX(-.8deg) translateX(-2px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .seaweed-sway{animation:none}
 }
 #start{
   position:absolute;
@@ -273,7 +325,13 @@ button:disabled{opacity:.55;cursor:not-allowed}
   from{opacity:0;transform:scale(.95) translateY(12px)}
   to{opacity:1;transform:none}
 }
-#cam-pane>video,#cam-pane>canvas,#canvas-pane>canvas{
+.cam-window{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  border-radius:21px;
+}
+.cam-window>video,.cam-window>canvas,#canvas-pane>canvas{
   position:absolute;
   inset:0;
   width:100%;
@@ -447,6 +505,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <body>
 <div id="title">
   <div id="title-art" role="img" aria-label="Underwater scene with a Start button">
+    <div class="seaweed-sway seaweed-left"></div>
+    <div class="seaweed-sway seaweed-right"></div>
     <button id="start" aria-label="Start">Start</button>
     <small></small>
   </div>
@@ -482,11 +542,13 @@ button:disabled{opacity:.55;cursor:not-allowed}
 
   <section id="stage">
     <div class="pane" id="cam-pane">
-      <video id="cam" autoplay playsinline muted></video>
-      <canvas id="cam-overlay" width="1280" height="720"></canvas>
-      <span class="tag">🐠 Pinch Pond</span>
-      <div id="detector"></div>
-      <div id="status">Loading hand tracker…</div>
+      <div class="cam-window">
+        <video id="cam" autoplay playsinline muted></video>
+        <canvas id="cam-overlay" width="1280" height="720"></canvas>
+        <span class="tag">🐠 Pinch Pond</span>
+        <div id="detector"></div>
+        <div id="status">Loading hand tracker…</div>
+      </div>
     </div>
 
     <div class="pane" id="canvas-pane">
