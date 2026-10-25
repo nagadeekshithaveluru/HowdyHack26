@@ -3025,6 +3025,396 @@ window.addEventListener("beforeunload",() => {
   });
 })();
 </script>
+<!-- ================= TROPHY TIDEPOOL ================= -->
+<style>
+  #tidepool-open{
+    bottom:132px;
+  }
+
+  #tidepool-modal{
+    position:fixed;
+    inset:0;
+    z-index:230;
+    display:none;
+    place-items:center;
+    padding:20px;
+    background:rgba(2,25,35,.78);
+    backdrop-filter:blur(10px);
+  }
+
+  #tidepool-modal.show{
+    display:grid;
+  }
+
+  .tidepool-card{
+    width:min(760px,100%);
+    max-height:calc(100vh - 40px);
+    overflow:auto;
+    border:3px solid rgba(208,255,244,.8);
+    border-radius:28px;
+    color:#effdf7;
+    background:linear-gradient(145deg,#0d5866,#073845);
+    box-shadow:0 25px 65px rgba(0,0,0,.55);
+  }
+
+  .tidepool-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:20px 22px;
+    border-bottom:1px solid rgba(200,255,245,.2);
+  }
+
+  .tidepool-header h2{
+    margin:0;
+    color:#fff;
+    font-size:clamp(25px,4vw,38px);
+  }
+
+  .tidepool-header p{
+    margin:4px 0 0;
+    color:#bff7ed;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .tidepool-progress{
+    margin:18px 20px 0;
+    padding:14px;
+    border:1px solid rgba(190,255,242,.25);
+    border-radius:17px;
+    color:#dffff6;
+    font-size:13px;
+    font-weight:800;
+    text-align:center;
+    background:rgba(255,255,255,.08);
+  }
+
+  .tidepool-progress strong{
+    color:#ffd166;
+    font-size:22px;
+  }
+
+  #tidepool-badges{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:13px;
+    padding:20px;
+  }
+
+  .tidepool-badge{
+    display:flex;
+    min-height:116px;
+    align-items:center;
+    gap:12px;
+    padding:14px;
+    border:2px solid rgba(255,255,255,.18);
+    border-radius:18px;
+    color:#d0f7ef;
+    background:rgba(255,255,255,.06);
+    opacity:.48;
+    filter:grayscale(.9);
+  }
+
+  .tidepool-badge.unlocked{
+    border-color:rgba(255,209,102,.8);
+    color:#fff;
+    background:linear-gradient(
+      135deg,
+      rgba(255,209,102,.24),
+      rgba(117,241,197,.16)
+    );
+    opacity:1;
+    filter:none;
+    box-shadow:0 0 20px rgba(255,209,102,.14);
+  }
+
+  .tidepool-badge-icon{
+    display:grid;
+    width:48px;
+    height:48px;
+    flex:0 0 48px;
+    place-items:center;
+    border-radius:50%;
+    font-size:25px;
+    background:rgba(255,255,255,.12);
+  }
+
+  .tidepool-badge strong{
+    display:block;
+    font-size:13px;
+  }
+
+  .tidepool-badge span{
+    display:block;
+    margin-top:4px;
+    font-size:10px;
+    font-weight:700;
+    line-height:1.4;
+  }
+
+  #tidepool-toast{
+    position:fixed;
+    top:150px;
+    left:50%;
+    z-index:240;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    max-width:calc(100vw - 32px);
+    padding:12px 17px;
+    border:3px solid rgba(255,245,205,.9);
+    border-radius:999px;
+    color:#174450;
+    font-size:13px;
+    font-weight:900;
+    text-align:center;
+    background:linear-gradient(135deg,#fffdf5,#caffed);
+    box-shadow:0 12px 30px rgba(0,0,0,.35);
+    opacity:0;
+    pointer-events:none;
+    transform:translate(-50%,-20px) scale(.85);
+  }
+
+  #tidepool-toast.show{
+    animation:tidepoolToast 3.2s ease forwards;
+  }
+
+  @keyframes tidepoolToast{
+    0%{
+      opacity:0;
+      transform:translate(-50%,-20px) scale(.85);
+    }
+    14%{
+      opacity:1;
+      transform:translate(-50%,0) scale(1.05);
+    }
+    26%,78%{
+      opacity:1;
+      transform:translate(-50%,0) scale(1);
+    }
+    100%{
+      opacity:0;
+      transform:translate(-50%,-15px) scale(.92);
+    }
+  }
+
+  @media(max-width:600px){
+    #tidepool-open{
+      right:10px;
+      bottom:124px;
+      min-height:42px;
+      padding:0 11px;
+      font-size:11px;
+    }
+
+    #tidepool-badges{
+      grid-template-columns:1fr;
+    }
+
+    #tidepool-toast{
+      top:132px;
+      font-size:11px;
+    }
+  }
+</style>
+
+<button class="reef-floating-button" id="tidepool-open">
+  🏆 Trophy Tidepool
+</button>
+
+<div id="tidepool-toast"></div>
+
+<div id="tidepool-modal">
+  <section class="tidepool-card">
+    <div class="tidepool-header">
+      <div>
+        <h2>🏆 Trophy Tidepool</h2>
+        <p>Every masterpiece brings new reef treasures.</p>
+      </div>
+
+      <button class="reef-close" id="tidepool-close">×</button>
+    </div>
+
+    <div class="tidepool-progress">
+      Finished rounds: <strong id="tidepool-total">0</strong>
+    </div>
+
+    <div id="tidepool-badges"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const STORAGE_KEY = "pinchDrawTrophyTidepool";
+
+  const BADGES = [
+    {
+      id:"first",
+      icon:"🐚",
+      title:"First Splash",
+      text:"Finish your first drawing round."
+    },
+    {
+      id:"three",
+      icon:"🐠",
+      title:"Reef Regular",
+      text:"Finish 3 drawing rounds."
+    },
+    {
+      id:"five",
+      icon:"👑",
+      title:"Ocean Artist",
+      text:"Finish 5 drawing rounds."
+    },
+    {
+      id:"duo",
+      icon:"🤝",
+      title:"Double Trouble",
+      text:"Finish a Double Drawdown round."
+    }
+  ];
+
+  const openButton = document.getElementById("tidepool-open");
+  const modal = document.getElementById("tidepool-modal");
+  const closeButton = document.getElementById("tidepool-close");
+  const totalElement = document.getElementById("tidepool-total");
+  const badgesElement = document.getElementById("tidepool-badges");
+  const toast = document.getElementById("tidepool-toast");
+
+  let soloWasCounted = false;
+  let duoWasCounted = false;
+
+  function getState(){
+    try{
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+        total:0,
+        badges:{}
+      };
+    }catch{
+      return {
+        total:0,
+        badges:{}
+      };
+    }
+  }
+
+  function saveState(state){
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+  }
+
+  function showToast(message){
+    toast.textContent = message;
+    toast.classList.remove("show");
+    void toast.offsetWidth;
+    toast.classList.add("show");
+  }
+
+  function unlockBadge(state,id){
+    if(state.badges[id]) return false;
+
+    state.badges[id] = true;
+
+    const badge = BADGES.find(item => item.id === id);
+
+    if(badge){
+      showToast(`✦ Trophy unlocked: ${badge.icon} ${badge.title}!`);
+    }
+
+    return true;
+  }
+
+  function updateAchievements(isDuo = false){
+    const state = getState();
+
+    state.total++;
+
+    if(state.total >= 1) unlockBadge(state,"first");
+    if(state.total >= 3) unlockBadge(state,"three");
+    if(state.total >= 5) unlockBadge(state,"five");
+    if(isDuo) unlockBadge(state,"duo");
+
+    saveState(state);
+  }
+
+  function renderTidepool(){
+    const state = getState();
+
+    totalElement.textContent = state.total;
+    badgesElement.innerHTML = "";
+
+    BADGES.forEach(badge => {
+      const card = document.createElement("div");
+      const unlocked = Boolean(state.badges[badge.id]);
+
+      card.className =
+        `tidepool-badge${unlocked ? " unlocked" : ""}`;
+
+      card.innerHTML = `
+        <div class="tidepool-badge-icon">${badge.icon}</div>
+        <div>
+          <strong>${badge.title}</strong>
+          <span>${unlocked ? "Unlocked! " : "Locked · "}${badge.text}</span>
+        </div>
+      `;
+
+      badgesElement.appendChild(card);
+    });
+  }
+
+  openButton.addEventListener("click",() => {
+    renderTidepool();
+    modal.classList.add("show");
+  });
+
+  closeButton.addEventListener("click",() => {
+    modal.classList.remove("show");
+  });
+
+  modal.addEventListener("click",event => {
+    if(event.target === modal){
+      modal.classList.remove("show");
+    }
+  });
+
+  /*
+    These watch the same result panels that the gallery watches.
+    They do not change your original camera or drawing code.
+  */
+  const soloResults = document.getElementById("solo-results");
+  const duoResults = document.getElementById("duo-results");
+
+  new MutationObserver(() => {
+    if(soloResults.classList.contains("show")){
+      if(!soloWasCounted){
+        soloWasCounted = true;
+        updateAchievements(false);
+      }
+    }else{
+      soloWasCounted = false;
+    }
+  }).observe(soloResults,{
+    attributes:true,
+    attributeFilter:["class"]
+  });
+
+  new MutationObserver(() => {
+    if(duoResults.classList.contains("show")){
+      if(!duoWasCounted){
+        duoWasCounted = true;
+        updateAchievements(true);
+      }
+    }else{
+      duoWasCounted = false;
+    }
+  }).observe(duoResults,{
+    attributes:true,
+    attributeFilter:["class"]
+  });
+})();
+</script>
+<!-- ================= END TROPHY TIDEPOOL ================= -->
 
 </body>
 </html>
