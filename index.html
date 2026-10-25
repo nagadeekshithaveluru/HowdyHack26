@@ -1008,6 +1008,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
 </div>
 
 <script type="module">
+  
+  
 import {
   HandLandmarker,
   FilesetResolver
@@ -2205,8 +2207,824 @@ window.addEventListener("beforeunload",() => {
   stopDuoTimer();
   video.srcObject?.getTracks().forEach(track => track.stop());
 });
+
 </script>
+
+<!-- ================= REEF CELEBRATION + GALLERY ================= -->
+<style>
+  #reef-celebration{
+    position:fixed;
+    inset:0;
+    z-index:130;
+    overflow:hidden;
+    pointer-events:none;
+  }
+
+  .reef-floating-button{
+    position:fixed;
+    right:18px;
+    z-index:150;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    min-height:48px;
+    padding:0 15px;
+    border:2px solid rgba(255,255,255,.72);
+    border-radius:999px;
+    color:#123842;
+    font-family:inherit;
+    font-size:12px;
+    font-weight:900;
+    background:linear-gradient(145deg,#fffdf5,#bff8e8);
+    box-shadow:0 8px 22px rgba(0,0,0,.3);
+    transition:.2s ease;
+  }
+
+  .reef-floating-button:hover{
+    background:#ffd166;
+    transform:translateY(-3px) scale(1.04);
+  }
+
+  #reef-gallery-open{bottom:18px}
+
+  #reef-sound-toggle{
+    right:18px;
+    bottom:75px;
+    width:48px;
+    padding:0;
+    border-radius:50%;
+    font-size:20px;
+  }
+
+  .reef-bubble{
+    position:absolute;
+    bottom:-80px;
+    border:2px solid rgba(255,255,255,.76);
+    border-radius:50%;
+    background:radial-gradient(
+      circle at 30% 25%,
+      rgba(255,255,255,.94),
+      rgba(117,241,197,.25) 30%,
+      rgba(44,174,196,.14) 58%,
+      transparent 74%
+    );
+    box-shadow:0 0 16px rgba(117,241,197,.48);
+    animation:reefBubbleRise var(--rise-time) ease-in forwards;
+  }
+
+  @keyframes reefBubbleRise{
+    0%{
+      opacity:0;
+      transform:translate(0,0) scale(.45);
+    }
+    12%{opacity:1}
+    100%{
+      opacity:0;
+      transform:translate(var(--bubble-drift),-115vh) scale(1.15);
+    }
+  }
+
+  .reef-celebration-fish{
+    position:absolute;
+    top:50%;
+    left:50%;
+    font-size:var(--fish-size);
+    filter:drop-shadow(0 0 10px rgba(255,209,102,.8));
+    animation:reefFishBurst 2s cubic-bezier(.15,.85,.2,1) forwards;
+  }
+
+  @keyframes reefFishBurst{
+    0%{
+      opacity:0;
+      transform:translate(-50%,-50%) scale(.2) rotate(0deg);
+    }
+    14%{
+      opacity:1;
+      transform:translate(-50%,-50%) scale(1.2) rotate(12deg);
+    }
+    100%{
+      opacity:0;
+      transform:
+        translate(
+          calc(-50% + var(--fish-x)),
+          calc(-50% + var(--fish-y))
+        )
+        scale(.85)
+        rotate(var(--fish-rotate));
+    }
+  }
+
+  #reef-finish-message{
+    position:fixed;
+    top:88px;
+    left:50%;
+    z-index:140;
+    padding:12px 20px;
+    border:3px solid rgba(255,245,205,.9);
+    border-radius:999px;
+    color:#174450;
+    font-size:14px;
+    font-weight:900;
+    text-align:center;
+    background:linear-gradient(135deg,#fffdf5,#caffed);
+    box-shadow:0 12px 30px rgba(0,0,0,.35);
+    opacity:0;
+    pointer-events:none;
+    transform:translate(-50%,-20px) scale(.85);
+  }
+
+  #reef-finish-message.show{
+    animation:reefMessage 2.8s ease forwards;
+  }
+
+  @keyframes reefMessage{
+    0%{
+      opacity:0;
+      transform:translate(-50%,-20px) scale(.85);
+    }
+    15%{
+      opacity:1;
+      transform:translate(-50%,0) scale(1.05);
+    }
+    26%,75%{
+      opacity:1;
+      transform:translate(-50%,0) scale(1);
+    }
+    100%{
+      opacity:0;
+      transform:translate(-50%,-14px) scale(.92);
+    }
+  }
+
+  #reef-gallery-modal,
+  #reef-preview-modal{
+    position:fixed;
+    inset:0;
+    z-index:220;
+    display:none;
+    place-items:center;
+    padding:20px;
+    background:rgba(2,25,35,.78);
+    backdrop-filter:blur(10px);
+  }
+
+  #reef-gallery-modal.show,
+  #reef-preview-modal.show{
+    display:grid;
+  }
+
+  .reef-gallery-card{
+    display:flex;
+    width:min(960px,100%);
+    max-height:calc(100vh - 40px);
+    flex-direction:column;
+    overflow:hidden;
+    border:3px solid rgba(208,255,244,.8);
+    border-radius:28px;
+    color:#effdf7;
+    background:linear-gradient(145deg,#0d5866,#073845);
+    box-shadow:0 25px 65px rgba(0,0,0,.55);
+  }
+
+  .reef-gallery-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:18px 22px;
+    border-bottom:1px solid rgba(200,255,245,.2);
+  }
+
+  .reef-gallery-top h2{
+    margin:0;
+    color:#fff;
+    font-size:clamp(24px,4vw,38px);
+  }
+
+  .reef-gallery-top p{
+    margin:4px 0 0;
+    color:#bff7ed;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .reef-close{
+    display:grid;
+    width:40px;
+    height:40px;
+    place-items:center;
+    border:2px solid rgba(255,255,255,.45);
+    border-radius:50%;
+    color:#fff;
+    font-size:22px;
+    background:rgba(255,255,255,.1);
+  }
+
+  .reef-close:hover{
+    border-color:#ffd166;
+    background:#d86358;
+  }
+
+  #reef-gallery-grid{
+    display:grid;
+    min-height:230px;
+    grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+    gap:14px;
+    overflow-y:auto;
+    padding:20px;
+  }
+
+  .reef-art{
+    overflow:hidden;
+    padding:0;
+    border:2px solid rgba(255,255,255,.3);
+    border-radius:16px;
+    color:#fff;
+    text-align:left;
+    background:rgba(255,255,255,.09);
+    transition:.18s ease;
+  }
+
+  .reef-art:hover{
+    border-color:#ffd166;
+    background:rgba(117,241,197,.16);
+    transform:translateY(-4px);
+  }
+
+  .reef-art img{
+    display:block;
+    width:100%;
+    aspect-ratio:16/9;
+    object-fit:cover;
+    background:#fffdf8;
+  }
+
+  .reef-art-copy{padding:9px}
+
+  .reef-art-copy strong{
+    display:block;
+    overflow:hidden;
+    font-size:12px;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .reef-art-copy span{
+    display:block;
+    margin-top:4px;
+    color:#bff7ed;
+    font-size:10px;
+    font-weight:700;
+  }
+
+  .reef-empty{
+    display:grid;
+    min-height:180px;
+    place-items:center;
+    grid-column:1/-1;
+    color:#c9f8ef;
+    font-weight:800;
+    text-align:center;
+  }
+
+  .reef-gallery-bottom{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 20px;
+    border-top:1px solid rgba(200,255,245,.2);
+  }
+
+  #reef-count{
+    color:#c9f8ef;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  #reef-clear{
+    border:0;
+    padding:9px 13px;
+    border-radius:999px;
+    color:#fff;
+    font-family:inherit;
+    font-size:11px;
+    font-weight:900;
+    background:#d86358;
+  }
+
+  .reef-preview{
+    position:relative;
+    width:min(900px,100%);
+    overflow:hidden;
+    border:3px solid rgba(255,241,204,.9);
+    border-radius:25px;
+    background:#fffdf8;
+    box-shadow:0 25px 65px rgba(0,0,0,.55);
+  }
+
+  .reef-preview img{
+    display:block;
+    width:100%;
+    max-height:70vh;
+    object-fit:contain;
+    background:#fffdf8;
+  }
+
+  .reef-preview-info{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:13px 17px;
+    color:#164450;
+    background:linear-gradient(135deg,#fffdf5,#dffff6);
+  }
+
+  .reef-download{
+    padding:10px 14px;
+    border-radius:999px;
+    color:#17333e;
+    font-size:11px;
+    font-weight:900;
+    text-decoration:none;
+    background:#ffd166;
+  }
+
+  @media(max-width:600px){
+    #reef-gallery-open{right:10px;bottom:10px}
+    #reef-sound-toggle{right:10px;bottom:67px}
+    #reef-gallery-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      padding:14px;
+    }
+    #reef-finish-message{
+      top:75px;
+      width:calc(100vw - 30px);
+      font-size:12px;
+    }
+  }
+</style>
+
+<div id="reef-celebration" aria-hidden="true"></div>
+<div id="reef-finish-message">🐠 Masterpiece saved to the Reef Gallery! 🫧</div>
+
+<button class="reef-floating-button" id="reef-sound-toggle" title="Mute ocean sounds">
+  🔊
+</button>
+
+<button class="reef-floating-button" id="reef-gallery-open">
+  🖼 Reef Gallery
+</button>
+
+<div id="reef-gallery-modal">
+  <section class="reef-gallery-card">
+    <div class="reef-gallery-top">
+      <div>
+        <h2>🖼 Reef Gallery</h2>
+        <p>Your saved underwater masterpieces.</p>
+      </div>
+      <button class="reef-close" id="reef-gallery-close">×</button>
+    </div>
+
+    <div id="reef-gallery-grid"></div>
+
+    <div class="reef-gallery-bottom">
+      <span id="reef-count">0 saved drawings</span>
+      <button id="reef-clear">🫧 Clear gallery</button>
+    </div>
+  </section>
+</div>
+
+<div id="reef-preview-modal">
+  <section class="reef-preview">
+    <button
+      class="reef-close"
+      id="reef-preview-close"
+      style="position:absolute;top:12px;right:12px;z-index:2;background:rgba(4,42,54,.82)"
+    >×</button>
+
+    <img id="reef-preview-image" alt="Saved drawing">
+
+    <div class="reef-preview-info">
+      <div>
+        <strong id="reef-preview-title">Saved artwork</strong><br>
+        <small id="reef-preview-date"></small>
+      </div>
+
+      <a id="reef-download" class="reef-download">⬇ Download</a>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const STORAGE_KEY = "pinchDrawReefGalleryFinal";
+  const MAX_DRAWINGS = 8;
+
+  const galleryOpen = document.getElementById("reef-gallery-open");
+  const galleryModal = document.getElementById("reef-gallery-modal");
+  const galleryClose = document.getElementById("reef-gallery-close");
+  const galleryGrid = document.getElementById("reef-gallery-grid");
+  const galleryCount = document.getElementById("reef-count");
+  const clearButton = document.getElementById("reef-clear");
+
+  const previewModal = document.getElementById("reef-preview-modal");
+  const previewClose = document.getElementById("reef-preview-close");
+  const previewImage = document.getElementById("reef-preview-image");
+  const previewTitle = document.getElementById("reef-preview-title");
+  const previewDate = document.getElementById("reef-preview-date");
+  const downloadButton = document.getElementById("reef-download");
+
+  const celebration = document.getElementById("reef-celebration");
+  const finishMessage = document.getElementById("reef-finish-message");
+  const soundButton = document.getElementById("reef-sound-toggle");
+
+  let soloWasSaved = false;
+  let duoWasSaved = false;
+  let soundOn = true;
+  let oceanStarted = false;
+  let audioContext = null;
+
+  function getItems(){
+    try{
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    }catch{
+      return [];
+    }
+  }
+
+  function storeItems(items){
+    try{
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(items.slice(0,MAX_DRAWINGS))
+      );
+    }catch{
+      alert("Gallery storage is full. Download artwork, then clear the gallery.");
+    }
+  }
+
+  function dateText(time){
+    return new Date(time).toLocaleString([],{
+      month:"short",
+      day:"numeric",
+      hour:"numeric",
+      minute:"2-digit"
+    });
+  }
+
+  function renderGallery(){
+    const items = getItems();
+
+    galleryGrid.innerHTML = "";
+    galleryCount.textContent =
+      `${items.length} saved drawing${items.length === 1 ? "" : "s"}`;
+
+    if(items.length === 0){
+      galleryGrid.innerHTML = `
+        <div class="reef-empty">
+          <div>
+            <div style="font-size:45px;margin-bottom:8px">🐚</div>
+            No saved drawings yet.<br>
+            Finish a round to add one!
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    items.forEach(item => {
+      const button = document.createElement("button");
+      const image = document.createElement("img");
+      const copy = document.createElement("div");
+      const title = document.createElement("strong");
+      const date = document.createElement("span");
+
+      button.className = "reef-art";
+      button.type = "button";
+
+      image.src = item.image;
+      image.alt = item.name;
+
+      copy.className = "reef-art-copy";
+      title.textContent = item.name;
+      date.textContent = dateText(item.time);
+
+      copy.append(title,date);
+      button.append(image,copy);
+      button.addEventListener("click",() => showPreview(item));
+
+      galleryGrid.appendChild(button);
+    });
+  }
+
+  function showPreview(item){
+    previewImage.src = item.image;
+    previewTitle.textContent = item.name;
+    previewDate.textContent = dateText(item.time);
+    downloadButton.href = item.image;
+    downloadButton.download =
+      `${item.name.replace(/[^a-z0-9]+/gi,"-") || "pinch-draw"}.jpg`;
+
+    previewModal.classList.add("show");
+  }
+
+  function snapshot(canvas){
+    const small = document.createElement("canvas");
+    small.width = 420;
+    small.height = 236;
+
+    const ctx = small.getContext("2d");
+    ctx.fillStyle = "#fffdf8";
+    ctx.fillRect(0,0,small.width,small.height);
+    ctx.drawImage(canvas,0,0,small.width,small.height);
+
+    return small.toDataURL("image/jpeg",.68);
+  }
+
+  function saveDrawing(canvas,name){
+    if(!canvas) return;
+
+    const items = getItems();
+
+    items.unshift({
+      image:snapshot(canvas),
+      name,
+      time:Date.now()
+    });
+
+    storeItems(items);
+  }
+
+  function makeCelebration(text){
+    finishMessage.textContent = text;
+    finishMessage.classList.remove("show");
+    void finishMessage.offsetWidth;
+    finishMessage.classList.add("show");
+
+    const icons = ["🐠","🐟","🫧","✦","🐚","⭐"];
+
+    for(let i = 0; i < 30; i++){
+      const bubble = document.createElement("div");
+      const size = 12 + Math.random() * 42;
+
+      bubble.className = "reef-bubble";
+      bubble.style.left = `${Math.random() * 100}%`;
+      bubble.style.width = `${size}px`;
+      bubble.style.height = `${size}px`;
+      bubble.style.setProperty(
+        "--rise-time",
+        `${2.8 + Math.random() * 2.5}s`
+      );
+      bubble.style.setProperty(
+        "--bubble-drift",
+        `${-120 + Math.random() * 240}px`
+      );
+
+      celebration.appendChild(bubble);
+      setTimeout(() => bubble.remove(),6000);
+    }
+
+    for(let i = 0; i < 28; i++){
+      const fish = document.createElement("div");
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 100 + Math.random() * 400;
+
+      fish.className = "reef-celebration-fish";
+      fish.textContent = icons[Math.floor(Math.random() * icons.length)];
+      fish.style.setProperty("--fish-x",`${Math.cos(angle) * distance}px`);
+      fish.style.setProperty("--fish-y",`${Math.sin(angle) * distance}px`);
+      fish.style.setProperty("--fish-rotate",`${-180 + Math.random() * 360}deg`);
+      fish.style.setProperty("--fish-size",`${18 + Math.random() * 27}px`);
+
+      celebration.appendChild(fish);
+      setTimeout(() => fish.remove(),2300);
+    }
+
+    celebrationSound();
+  }
+
+  /* Gallery controls */
+  galleryOpen.addEventListener("click",() => {
+    renderGallery();
+    galleryModal.classList.add("show");
+  });
+
+  galleryClose.addEventListener("click",() => {
+    galleryModal.classList.remove("show");
+  });
+
+  previewClose.addEventListener("click",() => {
+    previewModal.classList.remove("show");
+  });
+
+  galleryModal.addEventListener("click",event => {
+    if(event.target === galleryModal){
+      galleryModal.classList.remove("show");
+    }
+  });
+
+  previewModal.addEventListener("click",event => {
+    if(event.target === previewModal){
+      previewModal.classList.remove("show");
+    }
+  });
+
+  clearButton.addEventListener("click",() => {
+    if(confirm("Clear every saved drawing from the Reef Gallery?")){
+      localStorage.removeItem(STORAGE_KEY);
+      renderGallery();
+    }
+  });
+
+  /* Ocean sounds */
+  function getAudioContext(){
+    if(!audioContext){
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    if(audioContext.state === "suspended"){
+      audioContext.resume();
+    }
+
+    return audioContext;
+  }
+
+  function noiseBuffer(ctx){
+    const buffer = ctx.createBuffer(1,ctx.sampleRate * 2,ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for(let i = 0; i < data.length; i++){
+      data[i] = Math.random() * 2 - 1;
+    }
+
+    return buffer;
+  }
+
+  function playTone(frequency,duration,volume,delay = 0){
+    if(!soundOn) return;
+
+    try{
+      const ctx = getAudioContext();
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      oscillator.type = "sine";
+      oscillator.frequency.value = frequency;
+
+      gain.gain.setValueAtTime(.001,ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(
+        volume,
+        ctx.currentTime + delay + .03
+      );
+      gain.gain.exponentialRampToValueAtTime(
+        .001,
+        ctx.currentTime + delay + duration
+      );
+
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+
+      oscillator.start(ctx.currentTime + delay);
+      oscillator.stop(ctx.currentTime + delay + duration + .05);
+    }catch{}
+  }
+
+  function celebrationSound(){
+    playTone(523,.18,.05,0);
+    playTone(659,.18,.05,.12);
+    playTone(784,.28,.055,.24);
+  }
+
+  function bubbleSound(){
+    playTone(320 + Math.random() * 140,.18,.016);
+  }
+
+  function startOcean(){
+    if(oceanStarted || !soundOn) return;
+    oceanStarted = true;
+
+    try{
+      const ctx = getAudioContext();
+
+      const noise = ctx.createBufferSource();
+      noise.buffer = noiseBuffer(ctx);
+      noise.loop = true;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.value = 420;
+
+      const volume = ctx.createGain();
+      volume.gain.value = .018;
+
+      const wave = ctx.createOscillator();
+      const waveStrength = ctx.createGain();
+
+      wave.type = "sine";
+      wave.frequency.value = .07;
+      waveStrength.gain.value = .011;
+
+      wave.connect(waveStrength);
+      waveStrength.connect(volume.gain);
+
+      noise.connect(filter);
+      filter.connect(volume);
+      volume.connect(ctx.destination);
+
+      noise.start();
+      wave.start();
+
+      setInterval(() => {
+        if(soundOn && Math.random() > .5){
+          bubbleSound();
+        }
+      },3000);
+    }catch{
+      oceanStarted = false;
+    }
+  }
+
+  soundButton.addEventListener("click",() => {
+    soundOn = !soundOn;
+    soundButton.textContent = soundOn ? "🔊" : "🔇";
+    soundButton.title = soundOn
+      ? "Mute ocean sounds"
+      : "Turn on ocean sounds";
+
+    if(soundOn){
+      startOcean();
+      bubbleSound();
+    }
+  });
+
+  /* Browser audio must begin after a click */
+  document.getElementById("start").addEventListener("click",() => {
+    startOcean();
+    bubbleSound();
+  });
+
+  /* Save and celebrate Solo drawings */
+  const soloResults = document.getElementById("solo-results");
+
+  new MutationObserver(() => {
+    if(soloResults.classList.contains("show")){
+      if(!soloWasSaved){
+        soloWasSaved = true;
+
+        const prompt =
+          document.getElementById("solo-prompt-text").textContent;
+
+        saveDrawing(
+          document.getElementById("draw"),
+          `Solo: ${prompt}`
+        );
+
+        makeCelebration("🐠 Solo masterpiece saved to the Reef Gallery! 🫧");
+      }
+    }else{
+      soloWasSaved = false;
+    }
+  }).observe(soloResults,{
+    attributes:true,
+    attributeFilter:["class"]
+  });
+
+  /* Save and celebrate Duo drawings */
+  const duoResults = document.getElementById("duo-results");
+
+  new MutationObserver(() => {
+    if(duoResults.classList.contains("show")){
+      if(!duoWasSaved){
+        duoWasSaved = true;
+
+        const prompt =
+          document.getElementById("duo-prompt-text").textContent;
+
+        saveDrawing(
+          document.getElementById("duo-draw-left"),
+          `Player 1: ${prompt}`
+        );
+
+        saveDrawing(
+          document.getElementById("duo-draw-right"),
+          `Player 2: ${prompt}`
+        );
+
+        makeCelebration("🐟 Double Drawdown saved to the Reef Gallery! ✦");
+      }
+    }else{
+      duoWasSaved = false;
+    }
+  }).observe(duoResults,{
+    attributes:true,
+    attributeFilter:["class"]
+  });
+})();
+</script>
+
 </body>
 </html>
-```
-````
